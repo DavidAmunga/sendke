@@ -1,0 +1,6 @@
+# https://send.ke/robots.txt
+User-agent: *
+Allow: /
+
+# Sitemap
+Sitemap: https://send.ke/sitemap.xml 
