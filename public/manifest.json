@@ -1,7 +1,7 @@
 {
   "name": "send.ke",
   "short_name": "send.ke",
-  "description": "Pay Poster for your Phone number",
+  "description": "Make a Beautiful Payment Poster for your Phone Number",
   "start_url": "/",
   "display": "standalone",
   "theme_color": "#16a34a",
