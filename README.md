@@ -1,50 +1,103 @@
-# React + TypeScript + Vite
+# send.ke
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+<p align="center">
+  <img src="public/ogimage.jpg" alt="send.ke banner" width="600">
+</p>
 
-Currently, two official plugins are available:
+## Make Mobile Payment Posters in Seconds
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+**send.ke** is a free, offline-capable web tool that lets you create beautiful payment posters with your phone number and name. Perfect for businesses, street vendors, freelancers, and anyone who needs to receive mobile payments.
 
-## Expanding the ESLint configuration
+## 🔗 [Visit send.ke](https://send.ke)
 
-If you are developing a production application, we recommend updating the configuration to enable type aware lint rules:
+## ✨ Features
 
-- Configure the top-level `parserOptions` property like this:
+- **100% Free** - No hidden costs, no premium features
+- **Works Offline** - Create posters even without an internet connection
+- **No Account Required** - Just enter your details and download
+- **Instant Downloads** - Get your poster in seconds
+- **High-Quality Images** - Professional-looking posters every time
+- **Mobile Friendly** - Works on all devices
 
-```js
-export default tseslint.config({
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-})
+## 📱 What is a Payment Poster?
+
+A payment poster is a simple, effective way to display your mobile money details. Instead of complicated QR codes, customers just:
+
+1. See your phone number
+2. Send money directly to it
+3. That's it!
+
+Perfect for places where mobile money is popular but QR codes are not widely used.
+
+## 🚀 How to Use
+
+1. Enter your phone number
+2. Enter your name
+3. Click "GET YOUR MONEY POSTER"
+4. Share the downloaded image:
+   - Print it for your shop/stall
+   - Share it on social media
+   - Add it to your invoices
+   - Send it via WhatsApp or other messaging apps
+
+## 💻 Development
+
+### Prerequisites
+
+- Node.js 18+
+- npm or yarn
+
+### Installation
+
+```bash
+# Clone the repository
+git clone https://github.com/DavidAmunga/sendke.git
+cd sendke
+
+# Install dependencies
+npm install
+# or
+yarn
+
+# Start development server
+npm run dev
+# or
+yarn dev
 ```
 
-- Replace `tseslint.configs.recommended` to `tseslint.configs.recommendedTypeChecked` or `tseslint.configs.strictTypeChecked`
-- Optionally add `...tseslint.configs.stylisticTypeChecked`
-- Install [eslint-plugin-react](https://github.com/jsx-eslint/eslint-plugin-react) and update the config:
+### Building for Production
 
-```js
-// eslint.config.js
-import react from 'eslint-plugin-react'
-
-export default tseslint.config({
-  // Set the react version
-  settings: { react: { version: '18.3' } },
-  plugins: {
-    // Add the react plugin
-    react,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended rules
-    ...react.configs.recommended.rules,
-    ...react.configs['jsx-runtime'].rules,
-  },
-})
+```bash
+npm run build
+# or
+yarn build
 ```
+
+## 🛠️ Technologies Used
+
+- React
+- TypeScript
+- Vite
+- Tailwind CSS
+- html2canvas
+
+## 📄 License
+
+This project is open source and available under the [MIT License](LICENSE).
+
+## 🤝 Contributing
+
+Contributions, issues, and feature requests are welcome! Feel free to check the [issues page](https://github.com/DavidAmunga/sendke/issues).
+
+## 👨‍💻 Author
+
+**David Amunga**
+
+- Website: [davidamunga.com](https://davidamunga.com)
+- GitHub: [@DavidAmunga](https://github.com/DavidAmunga)
+
+---
+
+<p align="center">
+  Made with ❤️ in Kenya
+</p>

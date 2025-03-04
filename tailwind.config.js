@@ -5,6 +5,7 @@ export default {
     extend: {
       fontFamily: {
         sans: ["Inter", "system-ui", "sans-serif"],
+        display: ["CalSans", "Inter", "system-ui", "sans-serif"],
       },
     },
   },

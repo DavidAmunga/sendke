@@ -1,10 +1,11 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Button } from "./components/ui/button";
-import html2canvas from "html2canvas";
-
+import { CheckIcon, GithubIcon, LockIcon } from "lucide-react";
+import { motion } from "motion/react";
 function App() {
-  const [phoneNumber, setPhoneNumber] = useState("0712 345 678");
-  const [name, setName] = useState("JOHN DOE");
+  const [phoneNumber, setPhoneNumber] = useState("");
+  const [name, setName] = useState("");
+  const posterRef = useRef<HTMLDivElement>(null);
 
   const formatPhoneNumber = (value: string) => {
     const numbers = value.replace(/\D/g, "");
@@ -33,88 +34,277 @@ function App() {
   };
 
   const handleDownload = async () => {
-    const poster = document.getElementById("poster");
-    if (!poster) return;
+    if (!posterRef.current) return;
 
     try {
-      const canvas = await html2canvas(poster, {
-        scale: 4, // Increase quality
-        useCORS: true,
-        backgroundColor: null,
-        logging: false,
-        width: 1920, // Fixed width for 16:9 aspect ratio
-        height: 1080, // Fixed height for 16:9 aspect ratio
-      });
+      // Ensure Inter font is loaded before drawing
+      await document.fonts.load("bold 120px Inter");
 
-      // Convert to high-quality PNG
-      const image = canvas.toDataURL("image/png", 1.0);
+      // Create canvas with 16:9 aspect ratio
+      const canvas = document.createElement("canvas");
+      const width = 1200;
+      const height = 675;
+      canvas.width = width;
+      canvas.height = height;
 
-      // Create download link
+      const ctx = canvas.getContext("2d");
+      if (!ctx) {
+        console.error("Unable to get canvas context");
+        return;
+      }
+
+      // Colors
+      const greenColor = "#16a34a";
+      const borderColor = "#1a2335";
+      const whiteColor = "#ffffff";
+
+      // Define dimensions
+      const borderSize = 8;
+      const sectionHeight = height / 3;
+
+      // Draw outer border
+      ctx.fillStyle = borderColor;
+      ctx.fillRect(0, 0, width, height);
+
+      // Draw top section (green with "SEND MONEY")
+      ctx.fillStyle = greenColor;
+      ctx.fillRect(
+        borderSize,
+        borderSize,
+        width - 2 * borderSize,
+        sectionHeight - borderSize
+      );
+
+      // Draw middle section (white with phone number)
+      ctx.fillStyle = whiteColor;
+      ctx.fillRect(
+        borderSize,
+        sectionHeight + borderSize,
+        width - 2 * borderSize,
+        sectionHeight - 2 * borderSize
+      );
+
+      // Draw bottom section (green with name)
+      ctx.fillStyle = greenColor;
+      ctx.fillRect(
+        borderSize,
+        2 * sectionHeight + borderSize,
+        width - 2 * borderSize,
+        sectionHeight - 2 * borderSize
+      );
+
+      // Set text properties
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+
+      // Draw "SEND MONEY" text with Inter font
+      ctx.fillStyle = whiteColor;
+      ctx.font = "bold 120px Inter, sans-serif";
+      ctx.fillText("SEND MONEY", width / 2, sectionHeight / 2);
+
+      // Draw phone number with Inter font
+      ctx.fillStyle = "#000000";
+      ctx.font = "bold 130px Inter, sans-serif";
+      ctx.fillText(phoneNumber, width / 2, height / 2);
+
+      // Draw name with Inter font
+      ctx.fillStyle = whiteColor;
+      ctx.font = "bold 120px Inter, sans-serif";
+      ctx.fillText(name, width / 2, height - sectionHeight / 2);
+
+      // Generate download link
+      const dataUrl = canvas.toDataURL("image/png", 1.0);
       const link = document.createElement("a");
       link.download = `send-ke-${phoneNumber.replace(/\s/g, "")}.png`;
-      link.href = image;
+      link.href = dataUrl;
+      document.body.appendChild(link);
       link.click();
+      document.body.removeChild(link);
     } catch (error) {
       console.error("Error generating image:", error);
     }
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-gray-100">
-      {/* Header */}
-      <header className="h-full w-full">
-        <div className="max-w-7xl mx-auto px-4 py-2 sm:px-6 lg:px-8">
-          <h1 className="text-3xl font-bold text-gray-900">send.ke</h1>
+    <div className="min-h-screen flex flex-col bg-gray-100 overflow-x-hidden relative">
+      {/* Dotted background pattern */}
+      <div
+        className="absolute inset-0 z-0 pointer-events-none"
+        style={{
+          backgroundImage:
+            "radial-gradient(#3b82f6 0.5px, transparent 0.5px), radial-gradient(#3b82f6 0.5px, #f3f4f6 0.5px)",
+          backgroundSize: "20px 20px",
+          backgroundPosition: "0 0, 10px 10px",
+          opacity: 0.1,
+        }}
+      ></div>
+
+      {/* Header - Only for small screens */}
+      <header className="w-full py-4 px-4 sm:px-6 lg:px-8 bg-white shadow-sm md:hidden relative z-10">
+        <div className="max-w-7xl mx-auto flex-col justify-center flex  items-center">
+          <h1 className="text-2xl font-display sm:text-3xl font-bold text-green-600">
+            send.ke
+          </h1>
+          <h3 className="text-md  font-display text-gray-800 mt-2 max-w-md">
+              Your Phone Number 🤝 Payment Poster
+            </h3>
         </div>
       </header>
 
-      {/* Main Content */}
-      <main className="flex-1 flex flex-col px-4 py-12 sm:px-6 lg:px-8 gap-6">
-        <div className="w-full max-w-5xl mx-auto aspect-video">
-          <div
-            id="poster"
-            className="grid grid-rows-3 bg-white w-full h-full rounded-lg shadow-lg overflow-hidden border-8 border-gray-800"
+      {/* Main Content - Side by Side Layout */}
+      <main className="flex-1 flex flex-col md:flex-row px-4 py-6 sm:py-8 md:py-0 sm:px-6 lg:px-8 gap-8 relative z-10">
+        {/* Left Column - App Info */}
+        <div className="w-full md:w-1/2 flex flex-col justify-center md:py-12 md:px-8">
+          {/* Header for medium screens and up - now in left column */}
+          <div className="hidden md:block mb-8">
+            <h1 className="text-4xl font-display font-bold text-green-600">
+              send.ke
+            </h1>
+            <h3 className="text-lg font-display text-gray-800 mt-2 max-w-md">
+              Your Phone Number 🤝 Payment Poster
+            </h3>
+          </div>
+
+          {/* App features */}
+          <div className="flex flex-row gap-4 mb-6">
+            <div className="bg-white rounded-lg shadow-sm px-3 py-2 flex items-center border border-green-100 hover:border-green-400 cursor-pointer">
+              <CheckIcon className="w-5 h-5 text-green-600 mr-1" />
+              <span className="text-sm text-gray-700">100% Free</span>
+            </div>
+            <div className="bg-white rounded-lg shadow-sm px-3 py-2 flex items-center border border-blue-100 hover:border-blue-400 cursor-pointer">
+              <LockIcon className="w-5 h-5 text-blue-600 mr-1" />
+              <span className="text-sm text-gray-700">Works Offline</span>
+            </div>
+            <div className="bg-white rounded-lg shadow-sm px-3 py-2 flex items-center border border-purple-100 hover:border-purple-400 cursor-pointer">
+              <GithubIcon className="w-5 h-5 text-purple-600 mr-1" />
+              <a
+                href="https://github.com/DavidAmunga/sendke"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-sm text-gray-700 hover:text-gray-900"
+              >
+                Open Source
+              </a>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-xl shadow-md p-6 mb-6">
+            <h2 className="text-xl  font-bold text-gray-900 mb-4">
+              Make Your Payment Poster
+            </h2>
+
+            <div className="space-y-4">
+              <div>
+                <label
+                  htmlFor="phone"
+                  className="block text-sm font-medium text-gray-700 mb-1"
+                >
+                  Phone Number
+                </label>
+                <input
+                  id="phone"
+                  type="text"
+                  value={phoneNumber}
+                  onChange={handlePhoneChange}
+                  className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:outline-none text-lg font-semibold"
+                  placeholder="0712 345 678"
+                />
+              </div>
+
+              <div>
+                <label
+                  htmlFor="name"
+                  className="block text-sm font-medium text-gray-700 mb-1"
+                >
+                  Your Name
+                </label>
+                <input
+                  id="name"
+                  type="text"
+                  value={name}
+                  onChange={handleNameChange}
+                  className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:outline-none text-lg font-semibold"
+                  placeholder="JOHN DOE"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Download Button */}
+
+          <motion.div
+            whileHover={{
+              scale: 1.05,
+              transition: {
+                duration: 0.2,
+              },
+            }}
           >
-            {/* Send Money Header */}
-            <div className="bg-green-600 flex items-center justify-center px-6">
-              <h2 className="text-[min(10vw,5rem)] leading-tight select-none font-bold text-white text-center">
-                SEND MONEY
-              </h2>
-            </div>
-
-            {/* Phone Number Input */}
-            <div className="bg-white border-y-8 border-gray-800 flex items-center justify-center px-6">
-              <input
-                type="text"
-                value={phoneNumber}
-                onChange={handlePhoneChange}
-                className="w-full text-[min(10vw,5rem)] leading-tight font-bold text-center border-none focus:ring-2 focus:ring-green-500 focus:outline-none"
-                placeholder="Enter Phone Number"
-              />
-            </div>
-
-            {/* Name Input */}
-            <div className="bg-green-600 flex items-center justify-center px-6">
-              <input
-                type="text"
-                value={name}
-                onChange={handleNameChange}
-                className="w-full text-[min(10vw,5rem)] leading-tight font-bold text-white text-center bg-transparent border-none focus:ring-2 focus:ring-white focus:outline-none placeholder-white"
-                placeholder="Enter name"
-              />
-            </div>
+            <Button
+              onClick={handleDownload}
+              disabled={!isValid()}
+              className="w-full bg-gray-800 text-white text-xl font-bold py-8 rounded-lg shadow-lg hover:bg-gray-700 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              DOWNLOAD
+            </Button>
+          </motion.div>
+          <div className="text-center text-gray-500 mt-2 text-sm">
+            Download It, Share It , Stick it anywhere !
           </div>
         </div>
 
-        {/* Download Button */}
-        <Button
-          onClick={handleDownload}
-          disabled={!isValid()}
-          className="w-full bg-gray-800 text-white text-[min(5vw,2rem)] font-bold py-12 rounded-lg shadow-lg hover:bg-gray-700 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          DOWNLOAD
-        </Button>
+        {/* Right Column - Poster Preview */}
+        <div className="w-full md:w-1/2 flex items-center justify-center md:py-12">
+          <div className="w-full max-w-lg">
+            <div
+              id="poster"
+              ref={posterRef}
+              className="grid grid-rows-3 bg-white w-full aspect-video rounded-lg shadow-lg overflow-hidden border-8 border-gray-800"
+            >
+              {/* Send Money Header */}
+              <div className="bg-green-600 flex items-center justify-center px-4 sm:px-6">
+                <h2 className="text-2xl sm:text-2xl md:text-2xl lg:text-4xl leading-tight select-none  font-bold text-white text-center">
+                  SEND MONEY
+                </h2>
+              </div>
+
+              {/* Phone Number Display */}
+              <div className="bg-white border-y-8 border-gray-800 flex items-center justify-center px-4 sm:px-6">
+                <div className="w-full text-2xl sm:text-2xl md:text-2xl lg:text-4xl leading-tight font-bold text-center">
+                  {phoneNumber || "0712 345 678"}
+                </div>
+              </div>
+
+              {/* Name Display */}
+              <div className="bg-green-600 flex items-center justify-center px-4 sm:px-6">
+                <div className="w-full text-2xl sm:text-2xl md:text-2xl lg:text-4xl leading-tight font-bold text-white text-center">
+                  {name || "JOHN DOE"}
+                </div>
+              </div>
+            </div>
+            <p className="text-center text-gray-500 mt-2 text-sm">
+              Preview of your poster
+            </p>
+          </div>
+        </div>
       </main>
+
+      {/* Footer */}
+      <footer className="py-4 px-4 border-t border-gray-200 mt-8 bg-white relative z-10">
+        <div className="max-w-7xl mx-auto flex justify-center items-center">
+          <p className="text-sm text-gray-600">
+            Made with ❤️ by{" "}
+            <a
+              href="https://davidamunga.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-600 hover:text-blue-800 font-medium"
+            >
+              David Amunga
+            </a>
+          </p>
+        </div>
+      </footer>
     </div>
   );
 }
