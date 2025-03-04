@@ -1,7 +1,7 @@
 # send.ke
 
 <p align="center">
-  <img src="public/ogimage.jpg" alt="send.ke banner" width="600">
+  <img src="public/og.jpg" alt="send.ke banner" width="600">
 </p>
 
 ## Make Mobile Payment Posters in Seconds
