@@ -1,13 +1,72 @@
-import { useState, useRef } from "react";
+import { useRef } from "react";
 import { Button } from "./components/ui/button";
 import { CheckIcon, GithubIcon, LockIcon } from "lucide-react";
 import { motion } from "motion/react";
-function App() {
-  const [phoneNumber, setPhoneNumber] = useState("");
-  const [name, setName] = useState("");
-  const posterRef = useRef<HTMLDivElement>(null);
+import { ColorPicker } from "./components/ui/color-picker";
+import { Checkbox } from "./components/ui/checkbox";
+import { Input } from "./components/ui/input";
+import { useForm, Controller } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
 
-  const formatPhoneNumber = (value: string) => {
+// Define zod schema for validation
+const formSchema = z.object({
+  phoneNumber: z.string().min(10, "Phone number must be at least 10 digits"),
+  name: z.string().optional(),
+  selectedColor: z.string(),
+  showName: z.boolean(),
+  header: z.string().min(1, "Header cannot be empty")
+}).refine((data) => {
+  // If showName is true, name must not be empty
+  if (data.showName) {
+    return data.name && data.name.trim().length > 0;
+  }
+  return true;
+}, {
+  message: "Name is required when 'Show Name' is enabled",
+  path: ["name"]
+});
+
+// Define form type
+interface FormValues {
+  phoneNumber: string;
+  name: string;
+  selectedColor: string;
+  showName: boolean;
+  header: string;
+}
+
+function App() {
+  const posterRef = useRef<HTMLDivElement>(null);
+  
+  // Setup react-hook-form with zod resolver
+  const { control, handleSubmit, watch, setValue, formState: { errors, isValid } } = useForm<FormValues>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      phoneNumber: "",
+      name: "",
+      selectedColor: "#16a34a", // Default green-600
+      showName: true,
+      header: "SEND MONEY"
+    },
+    mode: "onChange" // Validate on change for immediate feedback
+  });
+
+  // Watch values for preview
+  const phoneNumber = watch("phoneNumber");
+  const name = watch("name");
+  const selectedColor = watch("selectedColor");
+  const showName = watch("showName");
+  const header = watch("header");
+
+  const colorOptions = [
+    { name: "Green", value: "#16a34a", class: "bg-green-600" },
+    { name: "Rose", value: "#be123c", class: "bg-rose-700" },
+    { name: "Yellow", value: "#F7C50C", class: "bg-[#F7C50C]" },
+    { name: "Blue", value: "#155DFC", class: "bg-blue-700" },
+  ];
+
+  const formatPhoneNumber = (value: string): string => {
     const numbers = value.replace(/\D/g, "");
     const match = numbers.match(/^(\d{4})(\d{3})(\d{3})$/);
     if (match) {
@@ -16,22 +75,9 @@ function App() {
     return value;
   };
 
-  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value.replace(/\D/g, "");
-    if (value.length <= 10) {
-      setPhoneNumber(formatPhoneNumber(value));
-    }
-  };
-
-  const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setName(e.target.value.toUpperCase());
-  };
-
-  const isValid = () => {
-    return (
-      phoneNumber.replace(/\D/g, "").length === 10 && name.trim().length > 0
-    );
-  };
+  const onSubmit = handleSubmit(async () => {
+    await handleDownload();
+  });
 
   const handleDownload = async () => {
     if (!posterRef.current) return;
@@ -54,20 +100,23 @@ function App() {
       }
 
       // Colors
-      const greenColor = "#16a34a";
+      const mainColor = selectedColor; // Use the selected color
       const borderColor = "#1a2335";
       const whiteColor = "#ffffff";
 
       // Define dimensions
       const borderSize = 8;
-      const sectionHeight = height / 3;
+      
+      // Adjust heights based on whether name is shown
+      const sectionCount = showName ? 3 : 2;
+      const sectionHeight = height / sectionCount;
 
       // Draw outer border
       ctx.fillStyle = borderColor;
       ctx.fillRect(0, 0, width, height);
 
-      // Draw top section (green with "SEND MONEY")
-      ctx.fillStyle = greenColor;
+      // Draw top section (colored with header)
+      ctx.fillStyle = mainColor;
       ctx.fillRect(
         borderSize,
         borderSize,
@@ -81,36 +130,40 @@ function App() {
         borderSize,
         sectionHeight + borderSize,
         width - 2 * borderSize,
-        sectionHeight - 2 * borderSize
+        showName ? sectionHeight - 2 * borderSize : height - sectionHeight - 2 * borderSize
       );
 
-      // Draw bottom section (green with name)
-      ctx.fillStyle = greenColor;
-      ctx.fillRect(
-        borderSize,
-        2 * sectionHeight + borderSize,
-        width - 2 * borderSize,
-        sectionHeight - 2 * borderSize
-      );
+      // Draw bottom section (colored with name) only if name is shown
+      if (showName) {
+        ctx.fillStyle = mainColor;
+        ctx.fillRect(
+          borderSize,
+          2 * sectionHeight + borderSize,
+          width - 2 * borderSize,
+          sectionHeight - 2 * borderSize
+        );
+      }
 
       // Set text properties
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
 
-      // Draw "SEND MONEY" text with Inter font
+      // Draw header text with Inter font
       ctx.fillStyle = whiteColor;
       ctx.font = "bold 120px Inter, sans-serif";
-      ctx.fillText("SEND MONEY", width / 2, sectionHeight / 2);
+      ctx.fillText(header.toUpperCase(), width / 2, sectionHeight / 2);
 
       // Draw phone number with Inter font
       ctx.fillStyle = "#000000";
       ctx.font = "bold 130px Inter, sans-serif";
-      ctx.fillText(phoneNumber, width / 2, height / 2);
+      ctx.fillText(phoneNumber, width / 2, showName ? height / 2 : (sectionHeight + (height - sectionHeight) / 2));
 
-      // Draw name with Inter font
-      ctx.fillStyle = whiteColor;
-      ctx.font = "bold 120px Inter, sans-serif";
-      ctx.fillText(name, width / 2, height - sectionHeight / 2);
+      // Draw name with Inter font (only if name is shown)
+      if (showName) {
+        ctx.fillStyle = whiteColor;
+        ctx.font = "bold 120px Inter, sans-serif";
+        ctx.fillText(name, width / 2, height - sectionHeight / 2);
+      }
 
       // Generate download link
       const dataUrl = canvas.toDataURL("image/png", 1.0);
@@ -146,8 +199,8 @@ function App() {
             send.ke
           </h1>
           <h3 className="text-md  font-display text-gray-800 mt-2 max-w-md">
-              Your Phone Number 🤝 Payment Poster
-            </h3>
+            Your Phone Number 🤝 Payment Poster
+          </h3>
         </div>
       </header>
 
@@ -193,7 +246,33 @@ function App() {
               Make Your Payment Poster
             </h2>
 
-            <div className="space-y-4">
+            <form onSubmit={onSubmit} className="space-y-4">
+              <div>
+                <label
+                  htmlFor="header"
+                  className="block text-sm font-medium text-gray-700 mb-1"
+                >
+                  Header Text
+                </label>
+                <Controller
+                  name="header"
+                  control={control}
+                  render={({ field }) => (
+                    <Input
+                      id="header"
+                      type="text"
+                      value={field.value}
+                      onChange={field.onChange}
+                      className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:outline-none text-lg font-semibold"
+                      placeholder="SEND MONEY"
+                    />
+                  )}
+                />
+                {errors.header && (
+                  <p className="mt-1 text-sm text-red-500">{errors.header.message}</p>
+                )}
+              </div>
+              
               <div>
                 <label
                   htmlFor="phone"
@@ -201,53 +280,141 @@ function App() {
                 >
                   Phone Number
                 </label>
-                <input
-                  id="phone"
-                  type="text"
-                  value={phoneNumber}
-                  onChange={handlePhoneChange}
-                  className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:outline-none text-lg font-semibold"
-                  placeholder="0712 345 678"
+                <Controller
+                  name="phoneNumber"
+                  control={control}
+                  render={({ field }) => (
+                    <Input
+                      id="phone"
+                      type="text"
+                      value={field.value}
+                      onChange={(e) => {
+                        const value = e.target.value.replace(/\D/g, "");
+                        if (value.length <= 10) {
+                          field.onChange(formatPhoneNumber(value));
+                        }
+                      }}
+                      className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:outline-none text-lg font-semibold"
+                      placeholder="0712 345 678"
+                    />
+                  )}
                 />
+                {errors.phoneNumber && (
+                  <p className="mt-1 text-sm text-red-500">{errors.phoneNumber.message}</p>
+                )}
               </div>
+
+              <div className="flex items-center space-x-2 mb-2">
+                <Controller
+                  name="showName"
+                  control={control}
+                  render={({ field }) => (
+                    <Checkbox
+                      id="showName"
+                      checked={field.value}
+                      onCheckedChange={(checked) => {
+                        field.onChange(checked);
+                      }}
+                    />
+                  )}
+                />
+                <label
+                  htmlFor="showName"
+                  className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                >
+                  Show Name Field
+                </label>
+              </div>
+
+              {showName && (
+                <div>
+                  <label
+                    htmlFor="name"
+                    className="block text-sm font-medium text-gray-700 mb-1"
+                  >
+                    Your Name
+                  </label>
+                  <Controller
+                    name="name"
+                    control={control}
+                    render={({ field }) => (
+                      <Input
+                        id="name"
+                        type="text"
+                        value={field.value}
+                        onChange={(e) => {
+                          field.onChange(e.target.value.toUpperCase());
+                        }}
+                        className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:outline-none text-lg font-semibold"
+                        placeholder="JOHN DOE"
+                      />
+                    )}
+                  />
+                  {errors.name && (
+                    <p className="mt-1 text-sm text-red-500">{errors.name.message}</p>
+                  )}
+                </div>
+              )}
 
               <div>
-                <label
-                  htmlFor="name"
-                  className="block text-sm font-medium text-gray-700 mb-1"
-                >
-                  Your Name
+                <label className="block text-sm font-medium text-gray-700 mb-3">
+                  Poster Color
                 </label>
-                <input
-                  id="name"
-                  type="text"
-                  value={name}
-                  onChange={handleNameChange}
-                  className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:outline-none text-lg font-semibold"
-                  placeholder="JOHN DOE"
-                />
+                <div className="flex items-center space-x-4">
+                  {colorOptions.map((color) => (
+                    <button
+                      key={color.value}
+                      type="button"
+                      className={`h-10 w-10 rounded-full border-2 flex items-center justify-center ${
+                        selectedColor === color.value
+                          ? "border-gray-800"
+                          : "border-transparent"
+                      } ${color.class}`}
+                      onClick={() => setValue("selectedColor", color.value)}
+                      aria-label={`Select ${color.name} color`}
+                    >
+                      {selectedColor === color.value && (
+                        <CheckIcon className="h-5 w-5 text-white" />
+                      )}
+                    </button>
+                  ))}
+                  <div className="flex items-center">
+                    <Controller
+                      name="selectedColor"
+                      control={control}
+                      render={({ field }) => (
+                        <ColorPicker
+                          value={field.value}
+                          onChange={(value) => field.onChange(value)}
+                          className="h-10 w-10 rounded-full"
+                        />
+                      )}
+                    />
+                    <span className="ml-2 text-xs text-gray-500">Custom</span>
+                  </div>
+                </div>
               </div>
-            </div>
+
+              {/* Download Button */}
+              <motion.div
+                whileHover={{
+                  scale: 1.05,
+                  transition: {
+                    duration: 0.2,
+                  },
+                }}
+              >
+                <Button
+                  type="submit"
+                  disabled={!isValid}
+                  className="w-full bg-gray-800 text-white text-xl font-bold py-8 rounded-lg shadow-lg hover:bg-gray-700 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  DOWNLOAD
+                </Button>
+              </motion.div>
+            </form>
           </div>
 
-          {/* Download Button */}
-
-          <motion.div
-            whileHover={{
-              scale: 1.05,
-              transition: {
-                duration: 0.2,
-              },
-            }}
-          >
-            <Button
-              onClick={handleDownload}
-              disabled={!isValid()}
-              className="w-full bg-gray-800 text-white text-xl font-bold py-8 rounded-lg shadow-lg hover:bg-gray-700 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              DOWNLOAD
-            </Button>
-          </motion.div>
           <div className="text-center text-gray-500 mt-2 text-sm">
             Download It, Share It , Stick it anywhere !
           </div>
@@ -260,27 +427,44 @@ function App() {
               id="poster"
               ref={posterRef}
               className="grid grid-rows-3 bg-white w-full aspect-video rounded-lg shadow-lg overflow-hidden border-8 border-gray-800"
+              style={{
+                gridTemplateRows: showName ? "1fr 1fr 1fr" : "1fr 1fr",
+              }}
             >
               {/* Send Money Header */}
-              <div className="bg-green-600 flex items-center justify-center px-4 sm:px-6">
-                <h2 className="text-2xl sm:text-2xl md:text-2xl lg:text-4xl leading-tight select-none  font-bold text-white text-center">
-                  SEND MONEY
+              <div
+                className="flex items-center justify-center px-4 sm:px-6"
+                style={{ backgroundColor: selectedColor }}
+              >
+                <h2 className="text-2xl sm:text-2xl md:text-2xl lg:text-4xl leading-tight select-none font-bold text-white text-center">
+                  {header}
                 </h2>
               </div>
 
               {/* Phone Number Display */}
-              <div className="bg-white border-y-8 border-gray-800 flex items-center justify-center px-4 sm:px-6">
+              <div
+                className="bg-white flex items-center justify-center px-4 sm:px-6"
+                style={{
+                  borderTop: "8px solid #1a2335",
+                  borderBottom: showName ? "8px solid #1a2335" : "none",
+                }}
+              >
                 <div className="w-full text-2xl sm:text-2xl md:text-2xl lg:text-4xl leading-tight font-bold text-center">
                   {phoneNumber || "0712 345 678"}
                 </div>
               </div>
 
-              {/* Name Display */}
-              <div className="bg-green-600 flex items-center justify-center px-4 sm:px-6">
-                <div className="w-full text-2xl sm:text-2xl md:text-2xl lg:text-4xl leading-tight font-bold text-white text-center">
-                  {name || "JOHN DOE"}
+              {/* Name Display - conditional rendering */}
+              {showName && (
+                <div
+                  className="flex items-center justify-center px-4 sm:px-6"
+                  style={{ backgroundColor: selectedColor }}
+                >
+                  <div className="w-full text-2xl sm:text-2xl md:text-2xl lg:text-4xl leading-tight font-bold text-white text-center">
+                    {name || "JOHN DOE"}
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
             <p className="text-center text-gray-500 mt-2 text-sm">
               Preview of your poster
