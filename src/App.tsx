@@ -39,20 +39,18 @@ interface FormValues {
 function App() {
   const posterRef = useRef<HTMLDivElement>(null);
   
-  // Setup react-hook-form with zod resolver
   const { control, handleSubmit, watch, setValue, formState: { errors, isValid } } = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       phoneNumber: "",
       name: "",
-      selectedColor: "#16a34a", // Default green-600
+      selectedColor: "#16a34a",
       showName: true,
       header: "SEND MONEY"
     },
-    mode: "onChange" // Validate on change for immediate feedback
+    mode: "onChange"
   });
 
-  // Watch values for preview
   const phoneNumber = watch("phoneNumber");
   const name = watch("name");
   const selectedColor = watch("selectedColor");
@@ -100,11 +98,10 @@ function App() {
       }
 
       // Colors
-      const mainColor = selectedColor; // Use the selected color
+      const mainColor = selectedColor;
       const borderColor = "#1a2335";
       const whiteColor = "#ffffff";
 
-      // Define dimensions
       const borderSize = 8;
       
       // Adjust heights based on whether name is shown
@@ -421,7 +418,8 @@ function App() {
         </div>
 
         {/* Right Column - Poster Preview */}
-        <div className="w-full md:w-1/2 flex items-center justify-center md:py-12">
+        <div className="w-full md:w-1/2 flex flex-col items-center justify-center md:py-12">
+           
           <div className="w-full max-w-lg">
             <div
               id="poster"
@@ -466,10 +464,13 @@ function App() {
                 </div>
               )}
             </div>
-            <p className="text-center text-gray-500 mt-2 text-sm">
-              Preview of your poster
-            </p>
+            
           </div>
+          <div className="flex flex-col items-start justify-center -rotate-40 text-center">
+              <p className="font-handwriting text-2xl  text-gray-600 z-10">
+                Preview of your poster
+              </p>
+            </div>
         </div>
       </main>
 
@@ -492,5 +493,6 @@ function App() {
     </div>
   );
 }
+
 
 export default App;
