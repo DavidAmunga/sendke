@@ -63,7 +63,7 @@ function App() {
     { name: "Green", value: "#16a34a", class: "bg-green-600" },
     { name: "Rose", value: "#be123c", class: "bg-rose-700" },
     { name: "Yellow", value: "#F7C50C", class: "bg-[#F7C50C]" },
-    { name: "Blue", value: "#155DFC", class: "bg-blue-700" },
+    { name: "Blue", value: "#1B398E", class: "bg-blue-800" },
   ];
 
   const formatPhoneNumber = (value: string): string => {
