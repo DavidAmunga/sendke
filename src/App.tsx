@@ -365,7 +365,7 @@ function App() {
                     <button
                       key={color.value}
                       type="button"
-                      className={`h-10 w-10 rounded-full border-2 flex items-center justify-center ${
+                      className={`size-8 rounded-full border-2 flex items-center justify-center ${
                         selectedColor === color.value
                           ? "border-gray-800"
                           : "border-transparent"
@@ -386,7 +386,7 @@ function App() {
                         <ColorPicker
                           value={field.value}
                           onChange={(value) => field.onChange(value)}
-                          className="h-10 w-10 rounded-full"
+                          className="size-8 rounded-full"
                         />
                       )}
                     />
