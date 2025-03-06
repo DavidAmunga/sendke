@@ -24,7 +24,7 @@ const formSchema = z
     name: z.string().optional(),
     selectedColor: z.string(),
     showName: z.boolean(),
-    header: z.string().min(1, "Header cannot be empty"),
+    title: z.string().min(1, "Title cannot be empty"),
   })
   .refine(
     (data) => {
@@ -46,7 +46,7 @@ interface FormValues {
   name: string;
   selectedColor: string;
   showName: boolean;
-  header: string;
+  title: string;
 }
 
 function App() {
@@ -66,7 +66,7 @@ function App() {
       name: "",
       selectedColor: "#16a34a",
       showName: true,
-      header: "SEND MONEY",
+      title: "SEND MONEY",
     },
     mode: "onChange",
   });
@@ -75,7 +75,7 @@ function App() {
   const name = watch("name");
   const selectedColor = watch("selectedColor");
   const showName = watch("showName");
-  const header = watch("header");
+  const title = watch("title");
 
   const colorOptions = [
     { name: "Green", value: "#16a34a", class: "bg-green-600" },
@@ -168,14 +168,14 @@ function App() {
       ctx.textBaseline = "middle";
 
       // Adjust font sizes based on template dimensions
-      const headerFontSize = Math.round(Math.min(width, height) * 0.1);
+      const titleFontSize = Math.round(Math.min(width, height) * 0.1);
       const phoneFontSize = Math.round(Math.min(width, height) * 0.11);
       const nameFontSize = Math.round(Math.min(width, height) * 0.1);
 
-      // Draw header text with Inter font
+      // Draw Title text with Inter font
       ctx.fillStyle = whiteColor;
-      ctx.font = `bold ${headerFontSize}px Inter, sans-serif`;
-      ctx.fillText(header.toUpperCase(), width / 2, sectionHeight / 2);
+      ctx.font = `bold ${titleFontSize}px Inter, sans-serif`;
+      ctx.fillText(title.toUpperCase(), width / 2, sectionHeight / 2);
 
       // Draw phone number with Inter font
       ctx.fillStyle = "#000000";
@@ -279,17 +279,17 @@ function App() {
             <form onSubmit={onSubmit} className="space-y-4">
               <div>
                 <label
-                  htmlFor="header"
+                  htmlFor="title"
                   className="block text-sm font-medium text-gray-700 mb-1"
                 >
-                  Header Text
+                  Title Text
                 </label>
                 <Controller
-                  name="header"
+                  name="title"
                   control={control}
                   render={({ field }) => (
                     <Input
-                      id="header"
+                      id="title"
                       type="text"
                       value={field.value}
                       onChange={field.onChange}
@@ -298,9 +298,9 @@ function App() {
                     />
                   )}
                 />
-                {errors.header && (
+                {errors.title && (
                   <p className="mt-1 text-sm text-red-500">
-                    {errors.header.message}
+                    {errors.title.message}
                   </p>
                 )}
               </div>
@@ -469,13 +469,13 @@ function App() {
                 maxHeight: "400px",
               }}
             >
-              {/* Send Money Header */}
+              {/* Title */}
               <div
                 className="flex items-center justify-center px-4 sm:px-6"
                 style={{ backgroundColor: selectedColor }}
               >
                 <h2 className="text-2xl sm:text-2xl md:text-2xl lg:text-4xl leading-tight select-none font-bold text-white text-center">
-                  {header}
+                  {title}
                 </h2>
               </div>
 
@@ -576,8 +576,50 @@ function App() {
         </div>
       </main>
 
+      {/* Twitter CTA for Template Contributions */}
+      <div className="w-full py-4 bg-blue-50 border-t border-blue-100 relative z-10">
+        <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-center sm:justify-between">
+          <div className="flex items-center mb-3 sm:mb-0">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-5 w-5 text-blue-500 mr-2"
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              strokeWidth="2"
+              stroke="currentColor"
+              fill="none"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+              <path d="M4 4l11.733 16h4.267l-11.733 -16z"></path>
+              <path d="M4 20l6.768 -6.768m2.46 -2.46l6.772 -6.772"></path>
+            </svg>
+            <span className="font-medium text-gray-700">
+              Have a business that needs a template?
+            </span>
+          </div>
+          <a
+            href="https://x.com/davidamunga_"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white text-sm font-medium rounded-md transition-colors"
+          >
+            <svg
+              className="w-4 h-4 mr-2"
+              fill="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"></path>
+            </svg>
+            Tweet @davidamunga_ to suggest new templates
+          </a>
+        </div>
+      </div>
+
       {/* Footer */}
-      <footer className="py-4 px-4 border-t border-gray-200 mt-8 bg-white relative z-10">
+      <footer className="py-4 px-4 border-t border-gray-200 mt-0 bg-white relative z-10">
         <div className="max-w-7xl mx-auto flex justify-center items-center">
           <p className="text-sm text-gray-600">
             Made with ❤️ by{" "}
