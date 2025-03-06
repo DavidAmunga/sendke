@@ -53,6 +53,18 @@
     "description": "For second-hand clothes vendors",
     "size": { "width": 1200, "height": 675, "label": "Standard Format" }
   },
+    {
+    "name": "Kinyozi",
+    "slug": "kinyozi",
+    "description": "For small barber shops and hair salons",
+    "size": { "width": 1200, "height": 675, "label": "Standard Format" }
+  },
+   {
+    "name": "Mkokoteni",
+    "slug": "mkokoteni",
+    "description": "For Transport Hand Carts",
+    "size": { "width": 1200, "height": 675, "label": "Standard Format" }
+  },
   {
     "name": "Phone Repair",
     "slug": "phone-repair",
