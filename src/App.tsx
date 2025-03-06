@@ -1,6 +1,12 @@
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import { Button } from "./components/ui/button";
-import { CheckIcon, GithubIcon, LockIcon } from "lucide-react";
+import {
+  CheckIcon,
+  GithubIcon,
+  LockIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
+} from "lucide-react";
 import { motion } from "motion/react";
 import { ColorPicker } from "./components/ui/color-picker";
 import { Checkbox } from "./components/ui/checkbox";
@@ -8,24 +14,31 @@ import { Input } from "./components/ui/input";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
+import templates from "./data/templates.json";
+import { ScrollArea, ScrollBar } from "./components/ui/scroll-area";
 
 // Define zod schema for validation
-const formSchema = z.object({
-  phoneNumber: z.string().min(10, "Phone number must be at least 10 digits"),
-  name: z.string().optional(),
-  selectedColor: z.string(),
-  showName: z.boolean(),
-  header: z.string().min(1, "Header cannot be empty")
-}).refine((data) => {
-  // If showName is true, name must not be empty
-  if (data.showName) {
-    return data.name && data.name.trim().length > 0;
-  }
-  return true;
-}, {
-  message: "Name is required when 'Show Name' is enabled",
-  path: ["name"]
-});
+const formSchema = z
+  .object({
+    phoneNumber: z.string().min(10, "Phone number must be at least 10 digits"),
+    name: z.string().optional(),
+    selectedColor: z.string(),
+    showName: z.boolean(),
+    header: z.string().min(1, "Header cannot be empty"),
+  })
+  .refine(
+    (data) => {
+      // If showName is true, name must not be empty
+      if (data.showName) {
+        return data.name && data.name.trim().length > 0;
+      }
+      return true;
+    },
+    {
+      message: "Name is required when 'Show Name' is enabled",
+      path: ["name"],
+    }
+  );
 
 // Define form type
 interface FormValues {
@@ -38,17 +51,24 @@ interface FormValues {
 
 function App() {
   const posterRef = useRef<HTMLDivElement>(null);
-  
-  const { control, handleSubmit, watch, setValue, formState: { errors, isValid } } = useForm<FormValues>({
+  const [selectedTemplate, setSelectedTemplate] = useState(templates[0]);
+
+  const {
+    control,
+    handleSubmit,
+    watch,
+    setValue,
+    formState: { errors, isValid },
+  } = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       phoneNumber: "",
       name: "",
       selectedColor: "#16a34a",
       showName: true,
-      header: "SEND MONEY"
+      header: "SEND MONEY",
     },
-    mode: "onChange"
+    mode: "onChange",
   });
 
   const phoneNumber = watch("phoneNumber");
@@ -84,10 +104,10 @@ function App() {
       // Ensure Inter font is loaded before drawing
       await document.fonts.load("bold 120px Inter");
 
-      // Create canvas with 16:9 aspect ratio
+      // Create canvas with dimensions from selected template
       const canvas = document.createElement("canvas");
-      const width = 1200;
-      const height = 675;
+      const width = selectedTemplate.size.width;
+      const height = selectedTemplate.size.height;
       canvas.width = width;
       canvas.height = height;
 
@@ -103,7 +123,7 @@ function App() {
       const whiteColor = "#ffffff";
 
       const borderSize = 8;
-      
+
       // Adjust heights based on whether name is shown
       const sectionCount = showName ? 3 : 2;
       const sectionHeight = height / sectionCount;
@@ -127,7 +147,9 @@ function App() {
         borderSize,
         sectionHeight + borderSize,
         width - 2 * borderSize,
-        showName ? sectionHeight - 2 * borderSize : height - sectionHeight - 2 * borderSize
+        showName
+          ? sectionHeight - 2 * borderSize
+          : height - sectionHeight - 2 * borderSize
       );
 
       // Draw bottom section (colored with name) only if name is shown
@@ -145,27 +167,38 @@ function App() {
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
 
+      // Adjust font sizes based on template dimensions
+      const headerFontSize = Math.round(Math.min(width, height) * 0.1);
+      const phoneFontSize = Math.round(Math.min(width, height) * 0.11);
+      const nameFontSize = Math.round(Math.min(width, height) * 0.1);
+
       // Draw header text with Inter font
       ctx.fillStyle = whiteColor;
-      ctx.font = "bold 120px Inter, sans-serif";
+      ctx.font = `bold ${headerFontSize}px Inter, sans-serif`;
       ctx.fillText(header.toUpperCase(), width / 2, sectionHeight / 2);
 
       // Draw phone number with Inter font
       ctx.fillStyle = "#000000";
-      ctx.font = "bold 130px Inter, sans-serif";
-      ctx.fillText(phoneNumber, width / 2, showName ? height / 2 : (sectionHeight + (height - sectionHeight) / 2));
+      ctx.font = `bold ${phoneFontSize}px Inter, sans-serif`;
+      ctx.fillText(
+        phoneNumber,
+        width / 2,
+        showName ? height / 2 : sectionHeight + (height - sectionHeight) / 2
+      );
 
       // Draw name with Inter font (only if name is shown)
       if (showName) {
         ctx.fillStyle = whiteColor;
-        ctx.font = "bold 120px Inter, sans-serif";
+        ctx.font = `bold ${nameFontSize}px Inter, sans-serif`;
         ctx.fillText(name, width / 2, height - sectionHeight / 2);
       }
 
       // Generate download link
       const dataUrl = canvas.toDataURL("image/png", 1.0);
       const link = document.createElement("a");
-      link.download = `send-ke-${phoneNumber.replace(/\s/g, "")}.png`;
+      link.download = `send-ke-${phoneNumber.replace(/\s/g, "")}-${
+        selectedTemplate.slug
+      }.png`;
       link.href = dataUrl;
       document.body.appendChild(link);
       link.click();
@@ -266,10 +299,12 @@ function App() {
                   )}
                 />
                 {errors.header && (
-                  <p className="mt-1 text-sm text-red-500">{errors.header.message}</p>
+                  <p className="mt-1 text-sm text-red-500">
+                    {errors.header.message}
+                  </p>
                 )}
               </div>
-              
+
               <div>
                 <label
                   htmlFor="phone"
@@ -297,7 +332,9 @@ function App() {
                   )}
                 />
                 {errors.phoneNumber && (
-                  <p className="mt-1 text-sm text-red-500">{errors.phoneNumber.message}</p>
+                  <p className="mt-1 text-sm text-red-500">
+                    {errors.phoneNumber.message}
+                  </p>
                 )}
               </div>
 
@@ -348,7 +385,9 @@ function App() {
                     )}
                   />
                   {errors.name && (
-                    <p className="mt-1 text-sm text-red-500">{errors.name.message}</p>
+                    <p className="mt-1 text-sm text-red-500">
+                      {errors.name.message}
+                    </p>
                   )}
                 </div>
               )}
@@ -419,14 +458,15 @@ function App() {
 
         {/* Right Column - Poster Preview */}
         <div className="w-full md:w-1/2 flex flex-col items-center justify-center md:py-12">
-           
           <div className="w-full max-w-lg">
             <div
               id="poster"
               ref={posterRef}
-              className="grid grid-rows-3 bg-white w-full aspect-video rounded-lg shadow-lg overflow-hidden border-8 border-gray-800"
+              className="grid bg-white w-full rounded-lg shadow-lg overflow-hidden border-8 border-gray-800"
               style={{
                 gridTemplateRows: showName ? "1fr 1fr 1fr" : "1fr 1fr",
+                aspectRatio: `${selectedTemplate.size.width} / ${selectedTemplate.size.height}`,
+                maxHeight: "400px",
               }}
             >
               {/* Send Money Header */}
@@ -464,13 +504,75 @@ function App() {
                 </div>
               )}
             </div>
-            
           </div>
-          <div className="flex flex-col items-start justify-center -rotate-40 text-center">
-              <p className="font-handwriting text-2xl  text-gray-600 z-10">
-                Preview of your poster
-              </p>
+          <div className="flex flex-col items-start justify-center -rotate-40 text-center mt-2">
+            <p className="font-handwriting text-2xl text-gray-600 z-10">
+              Preview of your poster
+            </p>
+          </div>
+
+          {/* Template Selector */}
+          <div className="w-full max-w-lg mt-8">
+            <h3 className="text-lg font-bold text-gray-800 mb-3 flex items-center">
+              Select Template Size
+              <span className="ml-2 text-xs text-gray-500 italic">
+                (scroll horizontally to see more)
+              </span>
+            </h3>
+            <div className="relative w-full rounded-xl overflow-hidden">
+              {/* Left scroll indicator */}
+              <div className="absolute left-0 top-0 bottom-0 w-12 bg-gradient-to-r from-gray-100 to-transparent z-10 pointer-events-none flex items-center justify-start pl-1">
+                <ChevronLeftIcon className="h-6 w-6 text-gray-500 animate-pulse" />
+              </div>
+
+              {/* Right scroll indicator */}
+              <div className="absolute right-0 top-0 bottom-0 w-12 bg-gradient-to-l from-gray-100 to-transparent z-10 pointer-events-none flex items-center justify-end pr-1">
+                <ChevronRightIcon className="h-6 w-6 text-gray-500 animate-pulse" />
+              </div>
+
+              <ScrollArea className="w-full h-[170px] rounded-lg">
+                <div className="flex space-x-4 px-8 py-1 min-w-max">
+                  {templates.map((template) => (
+                    <div
+                      key={template.slug}
+                      onClick={() => setSelectedTemplate(template)}
+                      className={`p-3 rounded-lg cursor-pointer transition-all w-[160px] h-[150px] flex flex-col ${
+                        selectedTemplate.slug === template.slug
+                          ? "bg-gray-800 text-white ring-2 ring-green-500"
+                          : "bg-white hover:bg-gray-100 border border-gray-200"
+                      }`}
+                    >
+                      <div className="font-medium truncate">
+                        {template.name}
+                      </div>
+                      <div className="text-xs mt-1 line-clamp-2 flex-grow">
+                        {template.description}
+                      </div>
+                      <div
+                        className={`text-xs mt-1 font-semibold ${
+                          selectedTemplate.slug === template.slug
+                            ? "text-green-300"
+                            : "text-green-600"
+                        }`}
+                      >
+                        {template.size.label}
+                      </div>
+                      <div
+                        className={`text-xs mt-1 ${
+                          selectedTemplate.slug === template.slug
+                            ? "text-gray-300"
+                            : "text-gray-500"
+                        }`}
+                      >
+                        {template.size.width}×{template.size.height}px
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <ScrollBar orientation="horizontal" />
+              </ScrollArea>
             </div>
+          </div>
         </div>
       </main>
 
@@ -493,6 +595,5 @@ function App() {
     </div>
   );
 }
-
 
 export default App;

@@ -1,0 +1,104 @@
+[
+  {
+    "name": "Generic Display",
+    "slug": "generic",
+    "description": "Perfect for helmet display",
+    "size": { "width": 1200, "height": 675, "label": "Standard Format" }
+  },
+  {
+    "name": "Boda boda",
+    "slug": "boda-boda",
+    "description": "Perfect for helmet display",
+    "size": { "width": 1200, "height": 800, "label": "Tall Format" }
+  },
+  {
+    "name": "Smokie Cart",
+    "slug": "smokie-cart",
+    "description": "Standard size for your cart",
+    "size": { "width": 1200, "height": 675, "label": "Standard Format" }
+  },
+  {
+    "name": "Soko Stall",
+    "slug": "soko-stall",
+    "description": "Perfect for market stalls",
+    "size": { "width": 1200, "height": 675, "label": "Standard Format" }
+  },
+  {
+    "name": "Mahindi Choma",
+    "slug": "mahindi-choma",
+    "description": "Generic sign for roasted maize stand",
+    "size": { "width": 800, "height": 1200, "label": "Standard Format" }
+  },
+  {
+    "name": "Hawker",
+    "slug": "hawker",
+    "description": "Portable size for mobile vendors",
+    "size": { "width": 1200, "height": 675, "label": "Standard Format" }
+  },
+  {
+    "name": "Kibandaski",
+    "slug": "kibandaski",
+    "description": "Ideal for small food kiosks",
+    "size": { "width": 1200, "height": 675, "label": "Standard Format" }
+  },
+  {
+    "name": "Mama Mboga",
+    "slug": "mama-mboga",
+    "description": "For vegetable vendors",
+    "size": { "width": 1200, "height": 675, "label": "Standard Format" }
+  },
+  {
+    "name": "Mitumba Seller",
+    "slug": "mitumba-seller",
+    "description": "For second-hand clothes vendors",
+    "size": { "width": 1200, "height": 675, "label": "Standard Format" }
+  },
+  {
+    "name": "Phone Repair",
+    "slug": "phone-repair",
+    "description": "For mobile phone repair services",
+    "size": { "width": 1200, "height": 675, "label": "Standard Format" }
+  },
+  {
+    "name": "Car Wash",
+    "slug": "car-wash",
+    "description": "For small car washing businesses",
+    "size": { "width": 1200, "height": 675, "label": "Standard Format" }
+  },
+  {
+    "name": "Charcoal Seller",
+    "slug": "charcoal-seller",
+    "description": "For charcoal vendors",
+    "size": { "width": 1200, "height": 675, "label": "Standard Format" }
+  },
+  {
+    "name": "Water Vendor",
+    "slug": "water-vendor",
+    "description": "For water selling services",
+    "size": { "width": 1200, "height": 675, "label": "Standard Format" }
+  },
+  {
+    "name": "Street Photographer",
+    "slug": "street-photographer",
+    "description": "For mobile photography services",
+    "size": { "width": 800, "height": 1200, "label": "Tall Format" }
+  },
+  {
+    "name": "Tailor",
+    "slug": "tailor",
+    "description": "For clothing repair and tailoring services",
+    "size": { "width": 1200, "height": 675, "label": "Standard Format" }
+  },
+  {
+    "name": "Fruits Vendor",
+    "slug": "fruits-vendor",
+    "description": "For fruit sellers",
+    "size": { "width": 1200, "height": 675, "label": "Standard Format" }
+  },
+  {
+    "name": "Juakali Artisan",
+    "slug": "juakali-artisan",
+    "description": "For informal metal workers and craftspeople",
+    "size": { "width": 1200, "height": 675, "label": "Standard Format" }
+  }
+]
