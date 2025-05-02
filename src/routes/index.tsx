@@ -7,6 +7,8 @@ import {
   LockIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
+  QrCodeIcon,
+  InfoIcon,
 } from "lucide-react";
 import { motion } from "motion/react";
 import { ColorPicker } from "@/components/ui/color-picker";
@@ -18,6 +20,14 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import templates from "@/data/templates.json";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
+import { QRCodeSVG } from "qrcode.react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import QRCode from "qrcode";
 
 // Define zod schema for validation
 const formSchema = z
@@ -26,6 +36,7 @@ const formSchema = z
     name: z.string().optional(),
     selectedColor: z.string(),
     showName: z.boolean(),
+    showQrCode: z.boolean(),
     title: z.string().min(1, "Title cannot be empty"),
   })
   .refine(
@@ -48,6 +59,7 @@ interface FormValues {
   name?: string;
   selectedColor: string;
   showName: boolean;
+  showQrCode: boolean;
   title: string;
 }
 
@@ -72,6 +84,7 @@ function Home() {
       name: "",
       selectedColor: "#16a34a",
       showName: true,
+      showQrCode: true,
       title: "SEND MONEY",
     },
     mode: "onChange",
@@ -81,6 +94,7 @@ function Home() {
   const name = watch("name");
   const selectedColor = watch("selectedColor");
   const showName = watch("showName");
+  const showQrCode = watch("showQrCode");
   const title = watch("title");
 
   const colorOptions = [
@@ -134,6 +148,9 @@ function Home() {
       const sectionCount = showName ? 3 : 2;
       const sectionHeight = height / sectionCount;
 
+      // Calculate QR code space if enabled
+      const qrCodeSize = showQrCode ? width * 0.25 : 0;
+
       // Draw outer border
       ctx.fillStyle = borderColor;
       ctx.fillRect(0, 0, width, height);
@@ -181,14 +198,18 @@ function Home() {
       // Draw Title text with Inter font
       ctx.fillStyle = whiteColor;
       ctx.font = `bold ${titleFontSize}px Inter, sans-serif`;
-      ctx.fillText(title.toUpperCase(), width / 2, sectionHeight / 2);
+      ctx.fillText(
+        title.toUpperCase(),
+        showQrCode ? (width - qrCodeSize) / 2 : width / 2,
+        sectionHeight / 2
+      );
 
       // Draw phone number with Inter font
       ctx.fillStyle = "#000000";
       ctx.font = `bold ${phoneFontSize}px Inter, sans-serif`;
       ctx.fillText(
         phoneNumber,
-        width / 2,
+        showQrCode ? (width - qrCodeSize) / 2 : width / 2,
         showName ? height / 2 : sectionHeight + (height - sectionHeight) / 2
       );
 
@@ -196,7 +217,110 @@ function Home() {
       if (showName) {
         ctx.fillStyle = whiteColor;
         ctx.font = `bold ${nameFontSize}px Inter, sans-serif`;
-        ctx.fillText(name??"", width / 2, height - sectionHeight / 2);
+        ctx.fillText(
+          name ?? "",
+          showQrCode ? (width - qrCodeSize) / 2 : width / 2,
+          height - sectionHeight / 2
+        );
+      }
+
+      // Draw QR code if enabled
+      if (showQrCode && phoneNumber) {
+        // Get cleaned phone number
+        const qrCodeData = `SM|${phoneNumber.replace(/\s/g, "")}`;
+        const qrSize = Math.min(height - 2 * borderSize, qrCodeSize) * 0.8;
+
+        // Calculate QR container dimensions
+        const qrContainerWidth = width / 3;
+        const containerHeight = qrSize * 1.4;
+        const containerWidth = qrContainerWidth - 40;
+
+        // Position container at the far right of the page
+        const rightPadding = 0; // Small padding from right edge
+        const containerX = width - containerWidth - rightPadding;
+        const containerY = height / 2 - containerHeight / 2;
+
+        // Calculate center position for QR code within the container
+        const qrX = containerX + (containerWidth - qrSize) / 2;
+        const qrY = containerY + (containerHeight - qrSize) / 2;
+
+        // Add shadow effect (draw shadow before the shape)
+        ctx.save();
+        ctx.shadowColor = "rgba(0,0,0,0.15)";
+        ctx.shadowBlur = 10;
+        ctx.shadowOffsetX = -3;
+        ctx.shadowOffsetY = 3;
+
+        // Draw white background for QR code with rounded left corners
+        ctx.fillStyle = "#FFFFFF";
+        ctx.beginPath();
+        roundRectLeft(
+          ctx,
+          containerX,
+          containerY,
+          containerWidth,
+          containerHeight,
+          15 // corner radius
+        );
+        ctx.closePath();
+        ctx.fill();
+
+        // Reset shadow
+        ctx.restore();
+
+        // Add border to QR container
+        ctx.strokeStyle = "#E5E7EB"; // Light gray border
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        roundRectLeft(
+          ctx,
+          containerX,
+          containerY,
+          containerWidth,
+          containerHeight,
+          15
+        );
+        ctx.closePath();
+        ctx.stroke();
+
+        // Create a proper QR code using the QRCode library
+        const tempCanvas = document.createElement("canvas");
+        tempCanvas.width = qrSize;
+        tempCanvas.height = qrSize;
+
+        // Use QRCode.toCanvas to generate a real QR code on the temp canvas
+        await new Promise<void>((resolve) => {
+          QRCode.toCanvas(
+            tempCanvas,
+            qrCodeData,
+            {
+              width: qrSize,
+              margin: 0,
+              color: {
+                dark: "#000000",
+                light: "#FFFFFF",
+              },
+              errorCorrectionLevel: "H",
+            },
+            (error: Error | null | undefined) => {
+              if (error) console.error("Error generating QR code:", error);
+              resolve();
+            }
+          );
+        });
+
+        // Draw QR code canvas onto main canvas
+        ctx.drawImage(tempCanvas, qrX, qrY, qrSize, qrSize);
+
+        // Add "SCAN WITH M-PESA" text above QR code
+        ctx.fillStyle = "#000000";
+        ctx.font = `bold ${Math.round(titleFontSize * 0.25)}px Inter, sans-serif`;
+        ctx.textAlign = "center";
+        ctx.fillText(
+          "SCAN WITH M-PESA",
+          containerX + containerWidth / 2,
+          containerY + 20
+        );
       }
 
       // Generate download link
@@ -342,6 +466,43 @@ function Home() {
                   </label>
                 </div>
 
+                <div className="flex items-center space-x-2 mb-2">
+                  <Controller
+                    name="showQrCode"
+                    control={control}
+                    render={({ field }) => (
+                      <Checkbox
+                        id="showQrCode"
+                        checked={field.value}
+                        onCheckedChange={(checked: boolean) => {
+                          field.onChange(checked);
+                        }}
+                      />
+                    )}
+                  />
+                  <label
+                    htmlFor="showQrCode"
+                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 flex items-center"
+                  >
+                    <QrCodeIcon className="h-4 w-4 mr-1 text-gray-600" />
+                    Show M-PESA QR Code
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <InfoIcon className="h-3 w-3 ml-1 text-gray-400 cursor-help" />
+                        </TooltipTrigger>
+                        <TooltipContent className="max-w-xs">
+                          <p>
+                            When scanned with M-PESA app, this QR code will
+                            pre-fill your phone number in the payment screen.
+                            Format: SM|phonenumber
+                          </p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  </label>
+                </div>
+
                 {showName && (
                   <div>
                     <label
@@ -445,7 +606,7 @@ function Home() {
             <div
               id="poster"
               ref={posterRef}
-              className="grid bg-white w-full rounded-lg shadow-lg overflow-hidden border-8 border-gray-800"
+              className="grid bg-white w-full rounded-lg shadow-lg overflow-hidden border-8 border-gray-800 relative"
               style={{
                 gridTemplateRows: showName ? "1fr 1fr 1fr" : "1fr 1fr",
                 aspectRatio: `${selectedTemplate.size.width} / ${selectedTemplate.size.height}`,
@@ -457,7 +618,9 @@ function Home() {
                 className="flex items-center justify-center px-4 sm:px-6"
                 style={{ backgroundColor: selectedColor }}
               >
-                <h2 className="text-2xl sm:text-2xl md:text-2xl lg:text-4xl leading-tight select-none font-bold text-white text-center">
+                <h2
+                  className={`text-2xl sm:text-2xl md:text-2xl lg:text-4xl leading-tight select-none font-bold text-white text-center ${showQrCode ? "mr-[25%]" : ""}`}
+                >
                   {title}
                 </h2>
               </div>
@@ -470,7 +633,9 @@ function Home() {
                   borderBottom: showName ? "8px solid #1a2335" : "none",
                 }}
               >
-                <div className="w-full text-2xl sm:text-2xl md:text-2xl lg:text-4xl leading-tight font-bold text-center">
+                <div
+                  className={`w-full text-2xl sm:text-2xl md:text-2xl lg:text-4xl leading-tight font-bold text-center ${showQrCode ? "mr-[25%]" : ""}`}
+                >
                   {phoneNumber || "0712 345 678"}
                 </div>
               </div>
@@ -481,8 +646,30 @@ function Home() {
                   className="flex items-center justify-center px-4 sm:px-6"
                   style={{ backgroundColor: selectedColor }}
                 >
-                  <div className="w-full text-2xl sm:text-2xl md:text-2xl lg:text-4xl leading-tight font-bold text-white text-center">
+                  <div
+                    className={`w-full text-2xl sm:text-2xl md:text-2xl lg:text-4xl leading-tight font-bold text-white text-center ${showQrCode ? "mr-[25%]" : ""}`}
+                  >
                     {name || "JOHN DOE"}
+                  </div>
+                </div>
+              )}
+
+              {/* QR Code Display - conditional rendering */}
+              {showQrCode && (
+                <div className="w-1/3 absolute right-0 top-0 bottom-0 flex flex-col  justify-center bg-transparent">
+                  <div className="bg-white p-3 flex items-center flex-col rounded-l-lg shadow-lg border">
+                    <span className="text-xs text-center font-bold uppercase tracking-wider mb-1">
+                      Scan with M-PESA
+                    </span>
+                    <QRCodeSVG
+                      value={`SM|${phoneNumber.replace(/\s/g, "") || "0712345678"}`}
+                      size={110}
+                      level="H"
+                      fgColor="#000000"
+                      bgColor={"#ffffff"}
+                      includeMargin={false}
+                      className=""
+                    />
                   </div>
                 </div>
               )}
@@ -602,4 +789,25 @@ function Home() {
       </div>
     </div>
   );
+}
+
+// Helper function to draw the path for a rounded rectangle with left corners rounded
+function roundRectLeft(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  width: number,
+  height: number,
+  radius: number
+) {
+  if (width < 2 * radius) radius = width / 2;
+  if (height < 2 * radius) radius = height / 2;
+
+  ctx.moveTo(x + radius, y);
+  ctx.lineTo(x + width, y);
+  ctx.lineTo(x + width, y + height);
+  ctx.lineTo(x + radius, y + height);
+  ctx.arcTo(x, y + height, x, y + height - radius, radius);
+  ctx.lineTo(x, y + radius);
+  ctx.arcTo(x, y, x + radius, y, radius);
 }
