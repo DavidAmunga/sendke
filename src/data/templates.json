@@ -53,13 +53,13 @@
     "description": "For second-hand clothes vendors",
     "size": { "width": 1200, "height": 675, "label": "Standard Format" }
   },
-    {
+  {
     "name": "Kinyozi",
     "slug": "kinyozi",
     "description": "For small barber shops and hair salons",
     "size": { "width": 1200, "height": 675, "label": "Standard Format" }
   },
-   {
+  {
     "name": "Mkokoteni",
     "slug": "mkokoteni",
     "description": "For Transport Hand Carts",
@@ -111,6 +111,60 @@
     "name": "Juakali Artisan",
     "slug": "juakali-artisan",
     "description": "For informal metal workers and craftspeople",
+    "size": { "width": 1200, "height": 675, "label": "Standard Format" }
+  },
+  {
+    "name": "Chips Vendor",
+    "slug": "chips-vendor",
+    "description": "For french fries and chips sellers",
+    "size": { "width": 1200, "height": 675, "label": "Standard Format" }
+  },
+  {
+    "name": "Shoe Shiner",
+    "slug": "shoe-shiner",
+    "description": "For shoe cleaning and polishing services",
+    "size": { "width": 800, "height": 1200, "label": "Tall Format" }
+  },
+  {
+    "name": "Cyber Cafe",
+    "slug": "cyber-cafe",
+    "description": "For small internet and printing services",
+    "size": { "width": 1200, "height": 675, "label": "Standard Format" }
+  },
+  {
+    "name": "Butchery",
+    "slug": "butchery",
+    "description": "For small meat shops and nyama choma spots",
+    "size": { "width": 1200, "height": 675, "label": "Standard Format" }
+  },
+  {
+    "name": "Small Duka",
+    "slug": "small-duka",
+    "description": "For neighborhood convenience stores",
+    "size": { "width": 1200, "height": 675, "label": "Standard Format" }
+  },
+  {
+    "name": "Motorcycle Repair",
+    "slug": "motorcycle-repair",
+    "description": "For boda boda and motorcycle mechanics",
+    "size": { "width": 1200, "height": 675, "label": "Standard Format" }
+  },
+  {
+    "name": "Mobile Accessories",
+    "slug": "mobile-accessories",
+    "description": "For phone accessories vendors",
+    "size": { "width": 800, "height": 1200, "label": "Tall Format" }
+  },
+  {
+    "name": "Chapati Seller",
+    "slug": "chapati-seller",
+    "description": "For flatbread and mandazi vendors",
+    "size": { "width": 1200, "height": 675, "label": "Standard Format" }
+  },
+  {
+    "name": "Cereals Vendor",
+    "slug": "cereals-vendor",
+    "description": "For beans, maize and other grain sellers",
     "size": { "width": 1200, "height": 675, "label": "Standard Format" }
   }
 ]
