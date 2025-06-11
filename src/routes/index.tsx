@@ -179,18 +179,7 @@ function Home() {
     }
   };
 
-  const formatAccountNumber = (value: string): string => {
-    // Check if the value contains only numbers (and possibly spaces)
-    const numbersOnly = value.replace(/\s/g, "");
-    if (!/^\d+$/.test(numbersOnly)) {
-      // If it contains non-numeric characters, return as-is
-      return value;
-    }
-
-    // Format numeric account numbers in groups of 4
-    const numbers = numbersOnly.replace(/\D/g, "");
-    return numbers.replace(/(\d{4})(?=\d)/g, "$1 ");
-  };
+ 
 
   // Get current display values based on payment type
   const getCurrentDisplayValues = () => {
