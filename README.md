@@ -1,12 +1,12 @@
 # send.ke
 
 <p align="center">
-  <img src="public/ogimage.jpg" alt="send.ke banner" width="600">
+  <img src="public/sendke_ogimage.jpg" alt="send.ke banner" width="600">
 </p>
 
 ## Make Mobile Payment Posters in Seconds
 
-**send.ke** is a free, offline-capable web tool that lets you create beautiful payment posters with your phone number and name. Perfect for businesses, street vendors, freelancers, and anyone who needs to receive mobile payments.
+**send.ke** is a free, offline-capable web tool that lets you create beautiful payment posters with any mobile money payment method and name. Perfect for businesses, street vendors, freelancers, and anyone who needs to receive mobile payments.
 
 ## 🔗 [Visit send.ke](https://send.ke)
 
@@ -23,7 +23,7 @@
 
 A payment poster is a simple, effective way to display your mobile money details. Instead of complicated QR codes, customers just:
 
-1. See your phone number
+1. See your phone number / till / paybill
 2. Send money directly to it
 3. That's it!
 
@@ -31,7 +31,7 @@ Perfect for places where mobile money is popular but QR codes are not widely use
 
 ## 🚀 How to Use
 
-1. Enter your phone number
+1. Enter your phone number / till / paybill
 2. Enter your name
 3. Click "GET YOUR MONEY POSTER"
 4. Share the downloaded image:

@@ -27,12 +27,20 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import QRCode from "qrcode";
+
+// Define payment types
+type PaymentType = "SEND_MONEY" | "PAYBILL" | "TILL_NUMBER";
 
 // Define zod schema for validation
 const formSchema = z
   .object({
-    phoneNumber: z.string().min(10, "Phone number must be at least 10 digits"),
+    paymentType: z.enum(["SEND_MONEY", "PAYBILL", "TILL_NUMBER"]),
+    phoneNumber: z.string().optional(),
+    paybillNumber: z.string().optional(),
+    accountNumber: z.string().optional(),
+    tillNumber: z.string().optional(),
     name: z.string().optional(),
     selectedColor: z.string(),
     showName: z.boolean(),
@@ -41,21 +49,46 @@ const formSchema = z
   })
   .refine(
     (data) => {
-      // If showName is true, name must not be empty
-      if (data.showName) {
-        return data.name && data.name.trim().length > 0;
+      // Validation based on payment type
+      if (data.paymentType === "SEND_MONEY") {
+        if (
+          !data.phoneNumber ||
+          data.phoneNumber.replace(/\s/g, "").length < 10
+        ) {
+          return false;
+        }
+        // If showName is true, name must not be empty
+        if (data.showName && (!data.name || data.name.trim().length === 0)) {
+          return false;
+        }
+      } else if (data.paymentType === "PAYBILL") {
+        if (!data.paybillNumber || data.paybillNumber.trim().length === 0) {
+          return false;
+        }
+        if (!data.accountNumber || data.accountNumber.trim().length === 0) {
+          return false;
+        }
+      } else if (data.paymentType === "TILL_NUMBER") {
+        if (!data.tillNumber || data.tillNumber.trim().length === 0) {
+          return false;
+        }
       }
       return true;
     },
     {
-      message: "Name is required when 'Show Name' is enabled",
-      path: ["name"],
+      message:
+        "Please fill in all required fields for the selected payment type",
+      path: ["phoneNumber"], // This will be overridden by specific field validation
     }
   );
 
 // Define form type
 interface FormValues {
-  phoneNumber: string;
+  paymentType: PaymentType;
+  phoneNumber?: string;
+  paybillNumber?: string;
+  accountNumber?: string;
+  tillNumber?: string;
   name?: string;
   selectedColor: string;
   showName: boolean;
@@ -80,7 +113,11 @@ function Home() {
   } = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
+      paymentType: "SEND_MONEY",
       phoneNumber: "",
+      paybillNumber: "",
+      accountNumber: "",
+      tillNumber: "",
       name: "",
       selectedColor: "#16a34a",
       showName: true,
@@ -90,7 +127,11 @@ function Home() {
     mode: "onChange",
   });
 
+  const paymentType = watch("paymentType");
   const phoneNumber = watch("phoneNumber");
+  const paybillNumber = watch("paybillNumber");
+  const accountNumber = watch("accountNumber");
+  const tillNumber = watch("tillNumber");
   const name = watch("name");
   const selectedColor = watch("selectedColor");
   const showName = watch("showName");
@@ -112,6 +153,76 @@ function Home() {
     }
     return value;
   };
+
+  const formatBusinessNumber = (value: string): string => {
+    const numbers = value.replace(/\D/g, "");
+    if (numbers.length === 0) return "";
+
+    // Format numbers into groups of 3-4 digits
+    if (numbers.length <= 3) {
+      return numbers;
+    } else if (numbers.length <= 6) {
+      // Split into two groups of 3
+      return numbers.replace(/(\d{3})(\d{1,3})/, "$1 $2");
+    } else if (numbers.length <= 7) {
+      // Split into 3 + 4
+      return numbers.replace(/(\d{3})(\d{1,4})/, "$1 $2");
+    } else if (numbers.length <= 8) {
+      // Split into 4 + 4
+      return numbers.replace(/(\d{4})(\d{1,4})/, "$1 $2");
+    } else if (numbers.length <= 9) {
+      // Split into 3 + 3 + 3
+      return numbers.replace(/(\d{3})(\d{3})(\d{1,3})/, "$1 $2 $3");
+    } else {
+      // For longer numbers, split into 3 + 3 + 4
+      return numbers.replace(/(\d{3})(\d{3})(\d{1,4})/, "$1 $2 $3");
+    }
+  };
+
+  const formatAccountNumber = (value: string): string => {
+    // Check if the value contains only numbers (and possibly spaces)
+    const numbersOnly = value.replace(/\s/g, "");
+    if (!/^\d+$/.test(numbersOnly)) {
+      // If it contains non-numeric characters, return as-is
+      return value;
+    }
+
+    // Format numeric account numbers in groups of 4
+    const numbers = numbersOnly.replace(/\D/g, "");
+    return numbers.replace(/(\d{4})(?=\d)/g, "$1 ");
+  };
+
+  // Get current display values based on payment type
+  const getCurrentDisplayValues = () => {
+    switch (paymentType) {
+      case "SEND_MONEY":
+        return {
+          primaryValue: phoneNumber || "0712 345 678",
+          secondaryValue: name || "JOHN DOE",
+          qrData: `SM|${(phoneNumber || "0712345678").replace(/\s/g, "")}`,
+        };
+      case "PAYBILL":
+        return {
+          primaryValue: formatBusinessNumber(paybillNumber || "123456"),
+          secondaryValue: formatAccountNumber(accountNumber || "ACCOUNT123"),
+          qrData: `PB|${(paybillNumber || "123456").replace(/\s/g, "")}|${(accountNumber || "ACCOUNT123").replace(/\s/g, "")}`,
+        };
+      case "TILL_NUMBER":
+        return {
+          primaryValue: formatBusinessNumber(tillNumber || "123456"),
+          secondaryValue: "",
+          qrData: `BG|${(tillNumber || "123456").replace(/\s/g, "")}`,
+        };
+      default:
+        return {
+          primaryValue: phoneNumber || "0712 345 678",
+          secondaryValue: name || "JOHN DOE",
+          qrData: `SM|${(phoneNumber || "0712345678").replace(/\s/g, "")}`,
+        };
+    }
+  };
+
+  const displayValues = getCurrentDisplayValues();
 
   const onSubmit = handleSubmit(async () => {
     await handleDownload();
@@ -144,8 +255,11 @@ function Home() {
 
       const borderSize = 8;
 
-      // Adjust heights based on whether name is shown
-      const sectionCount = showName ? 3 : 2;
+      // Adjust heights based on payment type and name display
+      const sectionCount =
+        (paymentType === "SEND_MONEY" && showName) || paymentType === "PAYBILL"
+          ? 3
+          : 2;
       const sectionHeight = height / sectionCount;
 
       // Calculate QR code space if enabled
@@ -164,20 +278,26 @@ function Home() {
         sectionHeight - borderSize
       );
 
-      // Draw middle section (white with phone number)
+      // Draw middle section (white with primary value)
       ctx.fillStyle = whiteColor;
       ctx.fillRect(
         borderSize,
         sectionHeight + borderSize,
         width - 2 * borderSize,
-        showName
+        sectionCount === 3
           ? sectionHeight - 2 * borderSize
           : height - sectionHeight - 2 * borderSize
       );
 
-      // Draw bottom section (colored with name) only if name is shown
-      if (showName) {
-        ctx.fillStyle = mainColor;
+      // Draw bottom section based on payment type
+      if (sectionCount === 3) {
+        if (paymentType === "SEND_MONEY") {
+          // Colored background for name
+          ctx.fillStyle = mainColor;
+        } else if (paymentType === "PAYBILL") {
+          // White background for account number
+          ctx.fillStyle = whiteColor;
+        }
         ctx.fillRect(
           borderSize,
           2 * sectionHeight + borderSize,
@@ -204,30 +324,36 @@ function Home() {
         sectionHeight / 2
       );
 
-      // Draw phone number with Inter font
+      // Draw primary value (phone/paybill/till) with Inter font
       ctx.fillStyle = "#000000";
       ctx.font = `bold ${phoneFontSize}px Inter, sans-serif`;
       ctx.fillText(
-        phoneNumber,
+        displayValues.primaryValue,
         showQrCode ? (width - qrCodeSize) / 2 : width / 2,
-        showName ? height / 2 : sectionHeight + (height - sectionHeight) / 2
+        sectionCount === 3
+          ? height / 2
+          : sectionHeight + (height - sectionHeight) / 2
       );
 
-      // Draw name with Inter font (only if name is shown)
-      if (showName) {
-        ctx.fillStyle = whiteColor;
+      // Draw secondary value (name/account) with Inter font
+      if (sectionCount === 3 && displayValues.secondaryValue) {
+        if (paymentType === "SEND_MONEY") {
+          ctx.fillStyle = whiteColor; // White text on colored background
+        } else if (paymentType === "PAYBILL") {
+          ctx.fillStyle = "#000000"; // Black text on white background
+        }
         ctx.font = `bold ${nameFontSize}px Inter, sans-serif`;
         ctx.fillText(
-          name ?? "",
+          displayValues.secondaryValue,
           showQrCode ? (width - qrCodeSize) / 2 : width / 2,
           height - sectionHeight / 2
         );
       }
 
       // Draw QR code if enabled
-      if (showQrCode && phoneNumber) {
-        // Get cleaned phone number
-        const qrCodeData = `SM|${phoneNumber.replace(/\s/g, "")}`;
+      if (showQrCode && displayValues.primaryValue) {
+        // Get QR code data based on payment type
+        const qrCodeData = displayValues.qrData;
         const qrSize = Math.min(height - 2 * borderSize, qrCodeSize) * 0.8;
 
         // Calculate QR container dimensions
@@ -326,7 +452,8 @@ function Home() {
       // Generate download link
       const dataUrl = canvas.toDataURL("image/png", 1.0);
       const link = document.createElement("a");
-      link.download = `send-ke-${phoneNumber.replace(/\s/g, "")}-${
+      const filenameValue = displayValues.primaryValue.replace(/\s/g, "");
+      link.download = `send-ke-${paymentType.toLowerCase()}-${filenameValue}-${
         selectedTemplate.slug
       }.png`;
       link.href = dataUrl;
@@ -382,97 +509,351 @@ function Home() {
             </CardTitle>
 
             <CardContent>
-              <form onSubmit={onSubmit} className="space-y-4">
-                <div>
-                  <label
-                    htmlFor="title"
-                    className="block text-sm font-medium text-gray-700 mb-1"
+              <Controller
+                name="paymentType"
+                control={control}
+                render={({ field }) => (
+                  <Tabs
+                    value={field.value}
+                    onValueChange={(value) => {
+                      field.onChange(value as PaymentType);
+                      setValue(
+                        "title",
+                        value.replaceAll(" ", "").replaceAll("_", " ")
+                      );
+                      setValue("showQrCode", value !== "PAYBILL");
+                    }}
+                    className="w-full"
                   >
-                    Title Text
-                  </label>
-                  <Controller
-                    name="title"
-                    control={control}
-                    render={({ field }) => (
-                      <Input
-                        id="title"
-                        type="text"
-                        value={field.value}
-                        onChange={field.onChange}
-                        className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:outline-none text-lg font-semibold"
-                        placeholder="SEND MONEY"
-                      />
-                    )}
-                  />
-                  {errors.title && (
-                    <p className="mt-1 text-sm text-red-500">
-                      {errors.title.message}
-                    </p>
-                  )}
-                </div>
+                    <TabsList className="grid w-full grid-cols-3 mb-6">
+                      <TabsTrigger
+                        value="SEND_MONEY"
+                        className="text-xs sm:text-sm"
+                      >
+                        Send Money
+                      </TabsTrigger>
+                      <TabsTrigger
+                        value="PAYBILL"
+                        className="text-xs sm:text-sm"
+                      >
+                        Paybill
+                      </TabsTrigger>
+                      <TabsTrigger
+                        value="TILL_NUMBER"
+                        className="text-xs sm:text-sm"
+                      >
+                        Till Number
+                      </TabsTrigger>
+                    </TabsList>
 
-                <div>
-                  <label
-                    htmlFor="phone"
-                    className="block text-sm font-medium text-gray-700 mb-1"
-                  >
-                    Phone Number
-                  </label>
-                  <Controller
-                    name="phoneNumber"
-                    control={control}
-                    render={({ field }) => (
-                      <Input
-                        id="phone"
-                        type="text"
-                        value={field.value}
-                        onChange={(e) => {
-                          const value = e.target.value.replace(/\D/g, "");
-                          if (value.length <= 10) {
-                            field.onChange(formatPhoneNumber(value));
-                          }
-                        }}
-                        className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:outline-none text-lg font-semibold"
-                        placeholder="0712 345 678"
-                      />
-                    )}
-                  />
-                  {errors.phoneNumber && (
-                    <p className="mt-1 text-sm text-red-500">
-                      {errors.phoneNumber.message}
-                    </p>
-                  )}
-                </div>
+                    <TabsContent value="SEND_MONEY" className="space-y-4">
+                      <form onSubmit={onSubmit} className="space-y-4">
+                        <div>
+                          <label
+                            htmlFor="title"
+                            className="block text-sm font-medium text-gray-700 mb-1"
+                          >
+                            Title Text
+                          </label>
+                          <Controller
+                            name="title"
+                            control={control}
+                            render={({ field }) => (
+                              <Input
+                                id="title"
+                                type="text"
+                                value={field.value}
+                                onChange={field.onChange}
+                                className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:outline-none text-lg font-semibold"
+                                placeholder="SEND MONEY"
+                              />
+                            )}
+                          />
+                          {errors.title && (
+                            <p className="mt-1 text-sm text-red-500">
+                              {errors.title.message}
+                            </p>
+                          )}
+                        </div>
 
-                <div className="flex items-center space-x-2 mb-2">
-                  <Controller
-                    name="showName"
-                    control={control}
-                    render={({ field }) => (
-                      <Checkbox
-                        id="showName"
-                        checked={field.value}
-                        onCheckedChange={(checked: boolean) => {
-                          field.onChange(checked);
-                        }}
-                      />
+                        <div>
+                          <label
+                            htmlFor="phone"
+                            className="block text-sm font-medium text-gray-700 mb-1"
+                          >
+                            Phone Number
+                          </label>
+                          <Controller
+                            name="phoneNumber"
+                            control={control}
+                            render={({ field }) => (
+                              <Input
+                                id="phone"
+                                type="text"
+                                value={field.value || ""}
+                                onChange={(e) => {
+                                  const value = e.target.value.replace(
+                                    /\D/g,
+                                    ""
+                                  );
+                                  if (value.length <= 10) {
+                                    field.onChange(formatPhoneNumber(value));
+                                  }
+                                }}
+                                className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:outline-none text-lg font-semibold"
+                                placeholder="0712 345 678"
+                              />
+                            )}
+                          />
+                          {errors.phoneNumber && (
+                            <p className="mt-1 text-sm text-red-500">
+                              {errors.phoneNumber.message}
+                            </p>
+                          )}
+                        </div>
+                      </form>
+                    </TabsContent>
+
+                    <TabsContent value="PAYBILL" className="space-y-4">
+                      <form onSubmit={onSubmit} className="space-y-4">
+                        <div>
+                          <label
+                            htmlFor="title"
+                            className="block text-sm font-medium text-gray-700 mb-1"
+                          >
+                            Title Text
+                          </label>
+                          <Controller
+                            name="title"
+                            control={control}
+                            render={({ field }) => (
+                              <Input
+                                id="title"
+                                type="text"
+                                value={field.value}
+                                onChange={field.onChange}
+                                className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:outline-none text-lg font-semibold"
+                                placeholder="SEND MONEY"
+                              />
+                            )}
+                          />
+                          {errors.title && (
+                            <p className="mt-1 text-sm text-red-500">
+                              {errors.title.message}
+                            </p>
+                          )}
+                        </div>
+
+                        <div>
+                          <label
+                            htmlFor="paybill"
+                            className="block text-sm font-medium text-gray-700 mb-1"
+                          >
+                            Paybill Number
+                          </label>
+                          <Controller
+                            name="paybillNumber"
+                            control={control}
+                            render={({ field }) => (
+                              <Input
+                                id="paybill"
+                                type="text"
+                                value={field.value || ""}
+                                onChange={(e) => {
+                                  const value = e.target.value.replace(
+                                    /\D/g,
+                                    ""
+                                  );
+                                  if (value.length <= 10) {
+                                    field.onChange(formatBusinessNumber(value));
+                                  }
+                                }}
+                                className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:outline-none text-lg font-semibold"
+                                placeholder="123 456"
+                              />
+                            )}
+                          />
+                          {errors.paybillNumber && (
+                            <p className="mt-1 text-sm text-red-500">
+                              {errors.paybillNumber.message}
+                            </p>
+                          )}
+                        </div>
+
+                        <div>
+                          <label
+                            htmlFor="account"
+                            className="block text-sm font-medium text-gray-700 mb-1"
+                          >
+                            Account Number
+                          </label>
+                          <Controller
+                            name="accountNumber"
+                            control={control}
+                            render={({ field }) => (
+                              <Input
+                                id="account"
+                                type="text"
+                                value={field.value || ""}
+                                onChange={(e) => {
+                                  const inputValue =
+                                    e.target.value.toUpperCase();
+                                  const formattedValue =
+                                    formatAccountNumber(inputValue);
+                                  field.onChange(formattedValue);
+                                }}
+                                className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:outline-none text-lg font-semibold"
+                                placeholder="1234 5678 or ACCOUNT123"
+                              />
+                            )}
+                          />
+                          {errors.accountNumber && (
+                            <p className="mt-1 text-sm text-red-500">
+                              {errors.accountNumber.message}
+                            </p>
+                          )}
+                        </div>
+                      </form>
+                    </TabsContent>
+
+                    <TabsContent value="TILL_NUMBER" className="space-y-4">
+                      <form onSubmit={onSubmit} className="space-y-4">
+                        <div>
+                          <label
+                            htmlFor="title"
+                            className="block text-sm font-medium text-gray-700 mb-1"
+                          >
+                            Title Text
+                          </label>
+                          <Controller
+                            name="title"
+                            control={control}
+                            render={({ field }) => (
+                              <Input
+                                id="title"
+                                type="text"
+                                value={field.value}
+                                onChange={field.onChange}
+                                className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:outline-none text-lg font-semibold"
+                                placeholder="SEND MONEY"
+                              />
+                            )}
+                          />
+                          {errors.title && (
+                            <p className="mt-1 text-sm text-red-500">
+                              {errors.title.message}
+                            </p>
+                          )}
+                        </div>
+
+                        <div>
+                          <label
+                            htmlFor="till"
+                            className="block text-sm font-medium text-gray-700 mb-1"
+                          >
+                            Till Number
+                          </label>
+                          <Controller
+                            name="tillNumber"
+                            control={control}
+                            render={({ field }) => (
+                              <Input
+                                id="till"
+                                type="text"
+                                value={field.value || ""}
+                                onChange={(e) => {
+                                  const value = e.target.value.replace(
+                                    /\D/g,
+                                    ""
+                                  );
+                                  if (value.length <= 10) {
+                                    field.onChange(formatBusinessNumber(value));
+                                  }
+                                }}
+                                className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:outline-none text-lg font-semibold"
+                                placeholder="123 456"
+                              />
+                            )}
+                          />
+                          {errors.tillNumber && (
+                            <p className="mt-1 text-sm text-red-500">
+                              {errors.tillNumber.message}
+                            </p>
+                          )}
+                        </div>
+                      </form>
+                    </TabsContent>
+                  </Tabs>
+                )}
+              />
+
+              {/* Common Options Outside Tabs */}
+              <div className="space-y-4 mt-6">
+                {paymentType === "SEND_MONEY" && (
+                  <div className="flex items-center space-x-2 mb-2">
+                    <Controller
+                      name="showName"
+                      control={control}
+                      render={({ field }) => (
+                        <Checkbox
+                          id="showName"
+                          checked={field.value}
+                          onCheckedChange={(checked: boolean) => {
+                            field.onChange(checked);
+                          }}
+                        />
+                      )}
+                    />
+                    <label
+                      htmlFor="showName"
+                      className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                    >
+                      Show Name Field
+                    </label>
+                  </div>
+                )}
+
+                {paymentType === "SEND_MONEY" && showName && (
+                  <div>
+                    <label
+                      htmlFor="name"
+                      className="block text-sm font-medium text-gray-700 mb-1"
+                    >
+                      Your Name
+                    </label>
+                    <Controller
+                      name="name"
+                      control={control}
+                      render={({ field }) => (
+                        <Input
+                          id="name"
+                          type="text"
+                          value={field.value || ""}
+                          onChange={(e) => {
+                            field.onChange(e.target.value.toUpperCase());
+                          }}
+                          className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:outline-none text-lg font-semibold"
+                          placeholder="JOHN DOE"
+                        />
+                      )}
+                    />
+                    {errors.name && (
+                      <p className="mt-1 text-sm text-red-500">
+                        {errors.name.message}
+                      </p>
                     )}
-                  />
-                  <label
-                    htmlFor="showName"
-                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                  >
-                    Show Name Field
-                  </label>
-                </div>
+                  </div>
+                )}
 
                 <div className="flex items-center space-x-2 mb-2">
                   <Controller
                     name="showQrCode"
                     control={control}
+                    disabled={paymentType === "PAYBILL"}
                     render={({ field }) => (
                       <Checkbox
                         id="showQrCode"
+                        disabled={paymentType === "PAYBILL"}
                         checked={field.value}
                         onCheckedChange={(checked: boolean) => {
                           field.onChange(checked);
@@ -502,38 +883,6 @@ function Home() {
                     </TooltipProvider>
                   </label>
                 </div>
-
-                {showName && (
-                  <div>
-                    <label
-                      htmlFor="name"
-                      className="block text-sm font-medium text-gray-700 mb-1"
-                    >
-                      Your Name
-                    </label>
-                    <Controller
-                      name="name"
-                      control={control}
-                      render={({ field }) => (
-                        <Input
-                          id="name"
-                          type="text"
-                          value={field.value}
-                          onChange={(e) => {
-                            field.onChange(e.target.value.toUpperCase());
-                          }}
-                          className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:outline-none text-lg font-semibold"
-                          placeholder="JOHN DOE"
-                        />
-                      )}
-                    />
-                    {errors.name && (
-                      <p className="mt-1 text-sm text-red-500">
-                        {errors.name.message}
-                      </p>
-                    )}
-                  </div>
-                )}
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-3">
@@ -584,14 +933,14 @@ function Home() {
                   }}
                 >
                   <Button
-                    type="submit"
+                    onClick={handleDownload}
                     disabled={!isValid}
                     className="w-full bg-gray-800 text-white text-xl font-bold py-8 rounded-lg shadow-lg hover:bg-gray-700 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     DOWNLOAD
                   </Button>
                 </motion.div>
-              </form>
+              </div>
             </CardContent>
           </Card>
 
@@ -601,14 +950,19 @@ function Home() {
         </div>
 
         {/* Right Column - Poster Preview */}
-        <div className="w-full md:w-1/2 flex flex-col items-center justify-center md:py-12">
+        <div className="w-full md:w-1/2 flex flex-col items-center justify-center md:py-12 md:sticky md:top-0 md:h-screen md:overflow-y-auto">
           <div className="w-full max-w-lg">
             <div
               id="poster"
               ref={posterRef}
               className="grid bg-white w-full rounded-lg shadow-lg overflow-hidden border-8 border-gray-800 relative"
               style={{
-                gridTemplateRows: showName ? "1fr 1fr 1fr" : "1fr 1fr",
+                gridTemplateRows:
+                  paymentType === "SEND_MONEY" && showName
+                    ? "1fr 1fr 1fr"
+                    : paymentType === "PAYBILL"
+                      ? "1fr 1fr 1fr"
+                      : "1fr 1fr",
                 aspectRatio: `${selectedTemplate.size.width} / ${selectedTemplate.size.height}`,
                 maxHeight: "400px",
               }}
@@ -625,31 +979,45 @@ function Home() {
                 </h2>
               </div>
 
-              {/* Phone Number Display */}
+              {/* Primary Value Display (Phone/Paybill/Till) */}
               <div
                 className="bg-white flex items-center justify-center px-4 sm:px-6"
                 style={{
                   borderTop: "8px solid #1a2335",
-                  borderBottom: showName ? "8px solid #1a2335" : "none",
+                  borderBottom:
+                    (paymentType === "SEND_MONEY" && showName) ||
+                    paymentType === "PAYBILL"
+                      ? "8px solid #1a2335"
+                      : "none",
                 }}
               >
                 <div
                   className={`w-full text-2xl sm:text-2xl md:text-2xl lg:text-4xl leading-tight font-bold text-center ${showQrCode ? "mr-[25%]" : ""}`}
                 >
-                  {phoneNumber || "0712 345 678"}
+                  {displayValues.primaryValue}
                 </div>
               </div>
 
-              {/* Name Display - conditional rendering */}
-              {showName && (
+              {/* Secondary Value Display - conditional rendering */}
+              {((paymentType === "SEND_MONEY" && showName) ||
+                paymentType === "PAYBILL") && (
                 <div
-                  className="flex items-center justify-center px-4 sm:px-6"
-                  style={{ backgroundColor: selectedColor }}
+                  className={`flex items-center justify-center px-4 sm:px-6 ${
+                    paymentType === "PAYBILL" ? "bg-white" : ""
+                  }`}
+                  style={{
+                    backgroundColor:
+                      paymentType === "SEND_MONEY" ? selectedColor : "#ffffff",
+                    borderBottom:
+                      paymentType === "PAYBILL" ? "none" : undefined,
+                  }}
                 >
                   <div
-                    className={`w-full text-2xl sm:text-2xl md:text-2xl lg:text-4xl leading-tight font-bold text-white text-center ${showQrCode ? "mr-[25%]" : ""}`}
+                    className={`w-full text-2xl sm:text-2xl md:text-2xl lg:text-4xl leading-tight font-bold text-center ${
+                      paymentType === "SEND_MONEY" ? "text-white" : "text-black"
+                    } ${showQrCode ? "mr-[25%]" : ""}`}
                   >
-                    {name || "JOHN DOE"}
+                    {displayValues.secondaryValue}
                   </div>
                 </div>
               )}
@@ -662,7 +1030,7 @@ function Home() {
                       Scan with M-PESA
                     </span>
                     <QRCodeSVG
-                      value={`SM|${phoneNumber.replace(/\s/g, "") || "0712345678"}`}
+                      value={displayValues.qrData}
                       size={110}
                       level="H"
                       fgColor="#000000"
