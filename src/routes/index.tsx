@@ -259,15 +259,20 @@ function Home() {
       // Adjust heights based on payment type and name display
       const hasSecondarySection =
         (paymentType === "SEND_MONEY" && showName) || paymentType === "PAYBILL";
+      const hasBlackSections = paymentType === "PAYBILL"; // Only Paybill gets black sections
 
       // Calculate section heights with black dividers
-      const totalSections = hasSecondarySection ? 5 : 3; // main sections + black dividers
-      const mainSectionHeight = hasSecondarySection
-        ? height * 0.27
-        : height * 0.35; // Adjust for larger black sections
-      const blackSectionHeight = hasSecondarySection
-        ? height * 0.12
-        : height * 0.15; // Increased from 0.05 to 0.12/0.15
+      let mainSectionHeight, blackSectionHeight;
+
+      if (hasBlackSections) {
+        // Paybill with black sections
+        mainSectionHeight = height * 0.27;
+        blackSectionHeight = height * 0.12;
+      } else {
+        // Send Money or Till Number without black sections
+        mainSectionHeight = hasSecondarySection ? height / 3 : height / 2;
+        blackSectionHeight = 0;
+      }
 
       // Calculate QR code space if enabled
       const qrCodeSize = showQrCode ? width * 0.25 : 0;
@@ -288,15 +293,17 @@ function Home() {
       );
       currentY += mainSectionHeight;
 
-      // Draw first black section (primary value label)
-      ctx.fillStyle = blackColor;
-      ctx.fillRect(
-        borderSize,
-        currentY,
-        width - 2 * borderSize,
-        blackSectionHeight
-      );
-      currentY += blackSectionHeight;
+      // Draw first black section (primary value label) - only for Paybill
+      if (hasBlackSections) {
+        ctx.fillStyle = blackColor;
+        ctx.fillRect(
+          borderSize,
+          currentY,
+          width - 2 * borderSize,
+          blackSectionHeight
+        );
+        currentY += blackSectionHeight;
+      }
 
       // Draw middle section (white with primary value)
       ctx.fillStyle = whiteColor;
@@ -310,15 +317,17 @@ function Home() {
 
       // Draw second black section and bottom section if there's a secondary value
       if (hasSecondarySection) {
-        // Draw second black section (secondary value label)
-        ctx.fillStyle = blackColor;
-        ctx.fillRect(
-          borderSize,
-          currentY,
-          width - 2 * borderSize,
-          blackSectionHeight
-        );
-        currentY += blackSectionHeight;
+        // Draw second black section (secondary value label) - only for Paybill
+        if (hasBlackSections) {
+          ctx.fillStyle = blackColor;
+          ctx.fillRect(
+            borderSize,
+            currentY,
+            width - 2 * borderSize,
+            blackSectionHeight
+          );
+          currentY += blackSectionHeight;
+        }
 
         // Draw bottom section (colored with secondary value)
         ctx.fillStyle = mainColor;
@@ -340,20 +349,34 @@ function Home() {
       const nameFontSize = Math.round(Math.min(width, height) * 0.1);
       const labelFontSize = Math.round(titleFontSize * 0.75); // Increased from 0.5 to 0.75 of title font
 
-      // Calculate section centers
-      const titleSectionCenter = borderSize + mainSectionHeight / 2;
-      const primaryValueSectionCenter =
-        borderSize +
-        mainSectionHeight +
-        blackSectionHeight +
-        mainSectionHeight / 2;
+      // Calculate section centers dynamically
+      let currentYForText = borderSize;
+
+      // Title section center
+      const titleSectionCenter = currentYForText + mainSectionHeight / 2;
+      currentYForText += mainSectionHeight;
+
+      // First black section center (only for Paybill)
+      let firstBlackSectionCenter = 0;
+      if (hasBlackSections) {
+        firstBlackSectionCenter = currentYForText + blackSectionHeight / 2;
+        currentYForText += blackSectionHeight;
+      }
+
+      // Primary value section center
+      const primaryValueSectionCenter = currentYForText + mainSectionHeight / 2;
+      currentYForText += mainSectionHeight;
+
+      // Second black section center (only for Paybill with secondary section)
+      let secondBlackSectionCenter = 0;
+      if (hasSecondarySection && hasBlackSections) {
+        secondBlackSectionCenter = currentYForText + blackSectionHeight / 2;
+        currentYForText += blackSectionHeight;
+      }
+
+      // Secondary value section center
       const secondaryValueSectionCenter = hasSecondarySection
-        ? borderSize +
-          mainSectionHeight +
-          blackSectionHeight +
-          mainSectionHeight +
-          blackSectionHeight +
-          mainSectionHeight / 2
+        ? currentYForText + mainSectionHeight / 2
         : 0;
 
       // Draw Title text with Inter font
@@ -365,14 +388,16 @@ function Home() {
         titleSectionCenter
       );
 
-      // Draw first black section label (primary value label)
-      ctx.fillStyle = whiteColor;
-      ctx.font = `bold ${labelFontSize}px Inter, sans-serif`;
-      ctx.fillText(
-        getPrimaryValueLabel(),
-        showQrCode ? (width - qrCodeSize) / 4 : width / 4, // Half width
-        borderSize + mainSectionHeight + blackSectionHeight / 2
-      );
+      // Draw first black section label (primary value label) - only for Paybill
+      if (hasBlackSections) {
+        ctx.fillStyle = whiteColor;
+        ctx.font = `bold ${labelFontSize}px Inter, sans-serif`;
+        ctx.fillText(
+          getPrimaryValueLabel(),
+          showQrCode ? (width - qrCodeSize) / 2 : width / 2, // Center horizontally
+          firstBlackSectionCenter
+        );
+      }
 
       // Draw primary value (phone/paybill/till) with Inter font
       ctx.fillStyle = "#000000";
@@ -385,18 +410,16 @@ function Home() {
 
       // Draw second black section label and secondary value if needed
       if (hasSecondarySection && displayValues.secondaryValue) {
-        // Draw second black section label (secondary value label)
-        ctx.fillStyle = whiteColor;
-        ctx.font = `bold ${labelFontSize}px Inter, sans-serif`;
-        ctx.fillText(
-          getSecondaryValueLabel(),
-          showQrCode ? (width - qrCodeSize) / 4 : width / 4, // Half width
-          borderSize +
-            mainSectionHeight +
-            blackSectionHeight +
-            mainSectionHeight +
-            blackSectionHeight / 2
-        );
+        // Draw second black section label (secondary value label) - only for Paybill
+        if (hasBlackSections) {
+          ctx.fillStyle = whiteColor;
+          ctx.font = `bold ${labelFontSize}px Inter, sans-serif`;
+          ctx.fillText(
+            getSecondaryValueLabel(),
+            showQrCode ? (width - qrCodeSize) / 2 : width / 2, // Center horizontally
+            secondBlackSectionCenter
+          );
+        }
 
         // Draw secondary value (name/account) with Inter font
         ctx.fillStyle = whiteColor; // White text on colored background
@@ -1056,11 +1079,11 @@ function Home() {
               className="grid bg-white w-full rounded-lg shadow-lg overflow-hidden border-8 border-gray-800 relative"
               style={{
                 gridTemplateRows:
-                  paymentType === "SEND_MONEY" && showName
+                  paymentType === "PAYBILL"
                     ? "3fr 1.2fr 3fr 1.2fr 3fr"
-                    : paymentType === "PAYBILL"
-                      ? "3fr 1.2fr 3fr 1.2fr 3fr"
-                      : "3fr 1.2fr 3fr",
+                    : paymentType === "SEND_MONEY" && showName
+                      ? "1fr 1fr 1fr"
+                      : "1fr 1fr",
                 aspectRatio: `${selectedTemplate.size.width} / ${selectedTemplate.size.height}`,
                 maxHeight: "400px",
               }}
@@ -1077,17 +1100,34 @@ function Home() {
                 </h2>
               </div>
 
-              {/* First Black Section - Primary Value Label */}
-              <div className="bg-black flex items-center justify-center px-4 py-2">
-                <div
-                  className={`w-1/2 text-sm sm:text-base md:text-lg font-bold text-white text-center ${showQrCode ? "mr-[25%]" : ""}`}
-                >
-                  {getPrimaryValueLabel()}
-                </div>
-              </div>
+              {/* Conditional Black Sections - Only for Paybill */}
+              {paymentType === "PAYBILL" && (
+                <>
+                  {/* First Black Section - Primary Value Label */}
+                  <div className="bg-black flex items-center justify-center px-4 py-2">
+                    <div
+                      className={`w-1/2 text-sm sm:text-base md:text-lg font-bold text-white text-center ${showQrCode ? "mr-[25%]" : ""}`}
+                    >
+                      {getPrimaryValueLabel()}
+                    </div>
+                  </div>
+                </>
+              )}
 
               {/* Primary Value Display (Phone/Paybill/Till) */}
-              <div className="bg-white flex items-center justify-center px-4 sm:px-6">
+              <div
+                className="bg-white flex items-center justify-center px-4 sm:px-6"
+                style={{
+                  borderTop:
+                    paymentType !== "PAYBILL" ? "8px solid #1a2335" : "none",
+                  borderBottom:
+                    paymentType !== "PAYBILL" &&
+                    paymentType === "SEND_MONEY" &&
+                    showName
+                      ? "8px solid #1a2335"
+                      : "none",
+                }}
+              >
                 <div
                   className={`w-full text-2xl sm:text-2xl md:text-2xl lg:text-4xl leading-tight font-bold text-center ${showQrCode ? "mr-[25%]" : ""}`}
                 >
@@ -1095,9 +1135,8 @@ function Home() {
                 </div>
               </div>
 
-              {/* Second Black Section - Secondary Value Label (conditional) */}
-              {((paymentType === "SEND_MONEY" && showName) ||
-                paymentType === "PAYBILL") && (
+              {/* Second Black Section - Only for Paybill */}
+              {paymentType === "PAYBILL" && (
                 <div className="bg-black flex items-center justify-center px-4 py-2">
                   <div
                     className={`w-1/2 text-sm sm:text-base md:text-lg font-bold text-white text-center ${showQrCode ? "mr-[25%]" : ""}`}
