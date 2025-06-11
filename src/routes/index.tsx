@@ -179,8 +179,6 @@ function Home() {
     }
   };
 
- 
-
   // Get current display values based on payment type
   const getCurrentDisplayValues = () => {
     switch (paymentType) {
@@ -326,6 +324,34 @@ function Home() {
           width - 2 * borderSize,
           mainSectionHeight
         );
+      }
+
+      // Draw horizontal borders for non-Paybill payment types
+      if (!hasBlackSections) {
+        const borderThickness = 15;
+        ctx.fillStyle = borderColor;
+
+        // Reset currentY for border drawing
+        let borderCurrentY = borderSize + mainSectionHeight;
+
+        // Draw top border of middle section
+        ctx.fillRect(
+          borderSize,
+          borderCurrentY - borderThickness / 2,
+          width - 2 * borderSize,
+          borderThickness
+        );
+
+        // Draw bottom border of middle section if there's a secondary section
+        if (hasSecondarySection) {
+          borderCurrentY += mainSectionHeight;
+          ctx.fillRect(
+            borderSize,
+            borderCurrentY - borderThickness / 2,
+            width - 2 * borderSize,
+            borderThickness
+          );
+        }
       }
 
       // Set text properties
