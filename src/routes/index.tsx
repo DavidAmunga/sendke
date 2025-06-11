@@ -465,6 +465,19 @@ function Home() {
     }
   };
 
+  const getPaymentTypeText = () => {
+    switch (paymentType) {
+      case "SEND_MONEY":
+        return "Phone Number";
+      case "PAYBILL":
+        return "Paybill";
+      case "TILL_NUMBER":
+        return "Till Number";
+      default:
+        return "Phone Number";
+    }
+  };
+
   return (
     <div className="flex flex-col bg-gray-100">
       <div className="flex-1 flex flex-col md:flex-row px-4 py-4 sm:py-8 md:py-0 sm:px-6 lg:px-8 gap-8 relative z-10">
@@ -476,7 +489,7 @@ function Home() {
               send.ke
             </h1>
             <h3 className="text-lg font-display text-gray-800 mt-2 max-w-md">
-              Your Phone Number 🤝 Payment Poster
+              Your {getPaymentTypeText()} 🤝 Payment Poster
             </h3>
           </div>
 
