@@ -204,8 +204,8 @@ function Home() {
       case "PAYBILL":
         return {
           primaryValue: formatBusinessNumber(paybillNumber || "123456"),
-          secondaryValue: formatAccountNumber(accountNumber || "ACCOUNT123"),
-          qrData: `PB|${(paybillNumber || "123456").replace(/\s/g, "")}|${(accountNumber || "ACCOUNT123").replace(/\s/g, "")}`,
+          secondaryValue: formatBusinessNumber(accountNumber || "123456"),
+          qrData: `PB|${(paybillNumber || "123456").replace(/\s/g, "")}|${(accountNumber || "123456").replace(/\s/g, "")}`,
         };
       case "TILL_NUMBER":
         return {
@@ -252,15 +252,22 @@ function Home() {
       const mainColor = selectedColor;
       const borderColor = "#1a2335";
       const whiteColor = "#ffffff";
+      const blackColor = "#000000";
 
       const borderSize = 8;
 
       // Adjust heights based on payment type and name display
-      const sectionCount =
-        (paymentType === "SEND_MONEY" && showName) || paymentType === "PAYBILL"
-          ? 3
-          : 2;
-      const sectionHeight = height / sectionCount;
+      const hasSecondarySection =
+        (paymentType === "SEND_MONEY" && showName) || paymentType === "PAYBILL";
+
+      // Calculate section heights with black dividers
+      const totalSections = hasSecondarySection ? 5 : 3; // main sections + black dividers
+      const mainSectionHeight = hasSecondarySection
+        ? height * 0.27
+        : height * 0.35; // Adjust for larger black sections
+      const blackSectionHeight = hasSecondarySection
+        ? height * 0.12
+        : height * 0.15; // Increased from 0.05 to 0.12/0.15
 
       // Calculate QR code space if enabled
       const qrCodeSize = showQrCode ? width * 0.25 : 0;
@@ -269,34 +276,57 @@ function Home() {
       ctx.fillStyle = borderColor;
       ctx.fillRect(0, 0, width, height);
 
+      let currentY = borderSize;
+
       // Draw top section (colored with header)
       ctx.fillStyle = mainColor;
       ctx.fillRect(
         borderSize,
-        borderSize,
+        currentY,
         width - 2 * borderSize,
-        sectionHeight - borderSize
+        mainSectionHeight
       );
+      currentY += mainSectionHeight;
+
+      // Draw first black section (primary value label)
+      ctx.fillStyle = blackColor;
+      ctx.fillRect(
+        borderSize,
+        currentY,
+        width - 2 * borderSize,
+        blackSectionHeight
+      );
+      currentY += blackSectionHeight;
 
       // Draw middle section (white with primary value)
       ctx.fillStyle = whiteColor;
       ctx.fillRect(
         borderSize,
-        sectionHeight + borderSize,
+        currentY,
         width - 2 * borderSize,
-        sectionCount === 3
-          ? sectionHeight - 2 * borderSize
-          : height - sectionHeight - 2 * borderSize
+        mainSectionHeight
       );
+      currentY += mainSectionHeight;
 
-      // Draw bottom section based on payment type
-      if (sectionCount === 3) {
+      // Draw second black section and bottom section if there's a secondary value
+      if (hasSecondarySection) {
+        // Draw second black section (secondary value label)
+        ctx.fillStyle = blackColor;
+        ctx.fillRect(
+          borderSize,
+          currentY,
+          width - 2 * borderSize,
+          blackSectionHeight
+        );
+        currentY += blackSectionHeight;
+
+        // Draw bottom section (colored with secondary value)
         ctx.fillStyle = mainColor;
         ctx.fillRect(
           borderSize,
-          2 * sectionHeight + borderSize,
+          currentY,
           width - 2 * borderSize,
-          sectionHeight - 2 * borderSize
+          mainSectionHeight
         );
       }
 
@@ -308,6 +338,23 @@ function Home() {
       const titleFontSize = Math.round(Math.min(width, height) * 0.1);
       const phoneFontSize = Math.round(Math.min(width, height) * 0.11);
       const nameFontSize = Math.round(Math.min(width, height) * 0.1);
+      const labelFontSize = Math.round(titleFontSize * 0.75); // Increased from 0.5 to 0.75 of title font
+
+      // Calculate section centers
+      const titleSectionCenter = borderSize + mainSectionHeight / 2;
+      const primaryValueSectionCenter =
+        borderSize +
+        mainSectionHeight +
+        blackSectionHeight +
+        mainSectionHeight / 2;
+      const secondaryValueSectionCenter = hasSecondarySection
+        ? borderSize +
+          mainSectionHeight +
+          blackSectionHeight +
+          mainSectionHeight +
+          blackSectionHeight +
+          mainSectionHeight / 2
+        : 0;
 
       // Draw Title text with Inter font
       ctx.fillStyle = whiteColor;
@@ -315,7 +362,16 @@ function Home() {
       ctx.fillText(
         title.toUpperCase(),
         showQrCode ? (width - qrCodeSize) / 2 : width / 2,
-        sectionHeight / 2
+        titleSectionCenter
+      );
+
+      // Draw first black section label (primary value label)
+      ctx.fillStyle = whiteColor;
+      ctx.font = `bold ${labelFontSize}px Inter, sans-serif`;
+      ctx.fillText(
+        getPrimaryValueLabel(),
+        showQrCode ? (width - qrCodeSize) / 4 : width / 4, // Half width
+        borderSize + mainSectionHeight + blackSectionHeight / 2
       );
 
       // Draw primary value (phone/paybill/till) with Inter font
@@ -324,19 +380,31 @@ function Home() {
       ctx.fillText(
         displayValues.primaryValue,
         showQrCode ? (width - qrCodeSize) / 2 : width / 2,
-        sectionCount === 3
-          ? height / 2
-          : sectionHeight + (height - sectionHeight) / 2
+        primaryValueSectionCenter
       );
 
-      // Draw secondary value (name/account) with Inter font
-      if (sectionCount === 3 && displayValues.secondaryValue) {
+      // Draw second black section label and secondary value if needed
+      if (hasSecondarySection && displayValues.secondaryValue) {
+        // Draw second black section label (secondary value label)
+        ctx.fillStyle = whiteColor;
+        ctx.font = `bold ${labelFontSize}px Inter, sans-serif`;
+        ctx.fillText(
+          getSecondaryValueLabel(),
+          showQrCode ? (width - qrCodeSize) / 4 : width / 4, // Half width
+          borderSize +
+            mainSectionHeight +
+            blackSectionHeight +
+            mainSectionHeight +
+            blackSectionHeight / 2
+        );
+
+        // Draw secondary value (name/account) with Inter font
         ctx.fillStyle = whiteColor; // White text on colored background
         ctx.font = `bold ${nameFontSize}px Inter, sans-serif`;
         ctx.fillText(
           displayValues.secondaryValue,
           showQrCode ? (width - qrCodeSize) / 2 : width / 2,
-          height - sectionHeight / 2
+          secondaryValueSectionCenter
         );
       }
 
@@ -465,6 +533,32 @@ function Home() {
         return "Till Number";
       default:
         return "Phone Number";
+    }
+  };
+
+  const getPrimaryValueLabel = () => {
+    switch (paymentType) {
+      case "SEND_MONEY":
+        return "PHONE NUMBER";
+      case "PAYBILL":
+        return "PAYBILL NUMBER";
+      case "TILL_NUMBER":
+        return "TILL NUMBER";
+      default:
+        return "PHONE NUMBER";
+    }
+  };
+
+  const getSecondaryValueLabel = () => {
+    switch (paymentType) {
+      case "SEND_MONEY":
+        return showName ? "NAME" : "";
+      case "PAYBILL":
+        return "ACCOUNT NUMBER";
+      case "TILL_NUMBER":
+        return "";
+      default:
+        return "";
     }
   };
 
@@ -699,14 +793,16 @@ function Home() {
                                 type="text"
                                 value={field.value || ""}
                                 onChange={(e) => {
-                                  const inputValue =
-                                    e.target.value.toUpperCase();
-                                  const formattedValue =
-                                    formatAccountNumber(inputValue);
-                                  field.onChange(formattedValue);
+                                  const value = e.target.value.replace(
+                                    /\D/g,
+                                    ""
+                                  );
+                                  if (value.length <= 10) {
+                                    field.onChange(formatBusinessNumber(value));
+                                  }
                                 }}
                                 className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:outline-none text-lg font-semibold"
-                                placeholder="1234 5678 or ACCOUNT123"
+                                placeholder="123 456"
                               />
                             )}
                           />
@@ -961,10 +1057,10 @@ function Home() {
               style={{
                 gridTemplateRows:
                   paymentType === "SEND_MONEY" && showName
-                    ? "1fr 1fr 1fr"
+                    ? "3fr 1.2fr 3fr 1.2fr 3fr"
                     : paymentType === "PAYBILL"
-                      ? "1fr 1fr 1fr"
-                      : "1fr 1fr",
+                      ? "3fr 1.2fr 3fr 1.2fr 3fr"
+                      : "3fr 1.2fr 3fr",
                 aspectRatio: `${selectedTemplate.size.width} / ${selectedTemplate.size.height}`,
                 maxHeight: "400px",
               }}
@@ -981,24 +1077,35 @@ function Home() {
                 </h2>
               </div>
 
+              {/* First Black Section - Primary Value Label */}
+              <div className="bg-black flex items-center justify-center px-4 py-2">
+                <div
+                  className={`w-1/2 text-sm sm:text-base md:text-lg font-bold text-white text-center ${showQrCode ? "mr-[25%]" : ""}`}
+                >
+                  {getPrimaryValueLabel()}
+                </div>
+              </div>
+
               {/* Primary Value Display (Phone/Paybill/Till) */}
-              <div
-                className="bg-white flex items-center justify-center px-4 sm:px-6"
-                style={{
-                  borderTop: "8px solid #1a2335",
-                  borderBottom:
-                    (paymentType === "SEND_MONEY" && showName) ||
-                    paymentType === "PAYBILL"
-                      ? "8px solid #1a2335"
-                      : "none",
-                }}
-              >
+              <div className="bg-white flex items-center justify-center px-4 sm:px-6">
                 <div
                   className={`w-full text-2xl sm:text-2xl md:text-2xl lg:text-4xl leading-tight font-bold text-center ${showQrCode ? "mr-[25%]" : ""}`}
                 >
                   {displayValues.primaryValue}
                 </div>
               </div>
+
+              {/* Second Black Section - Secondary Value Label (conditional) */}
+              {((paymentType === "SEND_MONEY" && showName) ||
+                paymentType === "PAYBILL") && (
+                <div className="bg-black flex items-center justify-center px-4 py-2">
+                  <div
+                    className={`w-1/2 text-sm sm:text-base md:text-lg font-bold text-white text-center ${showQrCode ? "mr-[25%]" : ""}`}
+                  >
+                    {getSecondaryValueLabel()}
+                  </div>
+                </div>
+              )}
 
               {/* Secondary Value Display - conditional rendering */}
               {((paymentType === "SEND_MONEY" && showName) ||
