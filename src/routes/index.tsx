@@ -291,13 +291,7 @@ function Home() {
 
       // Draw bottom section based on payment type
       if (sectionCount === 3) {
-        if (paymentType === "SEND_MONEY") {
-          // Colored background for name
-          ctx.fillStyle = mainColor;
-        } else if (paymentType === "PAYBILL") {
-          // White background for account number
-          ctx.fillStyle = whiteColor;
-        }
+        ctx.fillStyle = mainColor;
         ctx.fillRect(
           borderSize,
           2 * sectionHeight + borderSize,
@@ -337,11 +331,7 @@ function Home() {
 
       // Draw secondary value (name/account) with Inter font
       if (sectionCount === 3 && displayValues.secondaryValue) {
-        if (paymentType === "SEND_MONEY") {
-          ctx.fillStyle = whiteColor; // White text on colored background
-        } else if (paymentType === "PAYBILL") {
-          ctx.fillStyle = "#000000"; // Black text on white background
-        }
+        ctx.fillStyle = whiteColor; // White text on colored background
         ctx.font = `bold ${nameFontSize}px Inter, sans-serif`;
         ctx.fillText(
           displayValues.secondaryValue,
@@ -858,45 +848,44 @@ function Home() {
                   </div>
                 )}
 
-                <div className="flex items-center space-x-2 mb-2">
-                  <Controller
-                    name="showQrCode"
-                    control={control}
-                    disabled={paymentType === "PAYBILL"}
-                    render={({ field }) => (
-                      <Checkbox
-                        id="showQrCode"
-                        disabled={paymentType === "PAYBILL"}
-                        checked={field.value}
-                        onCheckedChange={(checked: boolean) => {
-                          field.onChange(checked);
-                        }}
-                      />
-                    )}
-                  />
-                  <label
-                    htmlFor="showQrCode"
-                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 flex items-center"
-                  >
-                    <QrCodeIcon className="h-4 w-4 mr-1 text-gray-600" />
-                    Show M-PESA QR Code
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <InfoIcon className="h-3 w-3 ml-1 text-gray-400 cursor-help" />
-                        </TooltipTrigger>
-                        <TooltipContent className="max-w-xs">
-                          <p>
-                            When scanned with M-PESA app, this QR code will
-                            pre-fill your phone number in the payment screen.
-                            Format: SM|phonenumber
-                          </p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-                  </label>
-                </div>
-
+                {paymentType !== "PAYBILL" && (
+                  <div className="flex items-center space-x-2 mb-2">
+                    <Controller
+                      name="showQrCode"
+                      control={control}
+                      render={({ field }) => (
+                        <Checkbox
+                          id="showQrCode"
+                          checked={field.value}
+                          onCheckedChange={(checked: boolean) => {
+                            field.onChange(checked);
+                          }}
+                        />
+                      )}
+                    />
+                    <label
+                      htmlFor="showQrCode"
+                      className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 flex items-center"
+                    >
+                      <QrCodeIcon className="h-4 w-4 mr-1 text-gray-600" />
+                      Show M-PESA QR Code
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <InfoIcon className="h-3 w-3 ml-1 text-gray-400 cursor-help" />
+                          </TooltipTrigger>
+                          <TooltipContent className="max-w-xs">
+                            <p>
+                              When scanned with M-PESA app, this QR code will
+                              pre-fill your phone number in the payment screen.
+                              Format: SM|phonenumber
+                            </p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    </label>
+                  </div>
+                )}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-3">
                     Poster Color
@@ -1015,20 +1004,13 @@ function Home() {
               {((paymentType === "SEND_MONEY" && showName) ||
                 paymentType === "PAYBILL") && (
                 <div
-                  className={`flex items-center justify-center px-4 sm:px-6 ${
-                    paymentType === "PAYBILL" ? "bg-white" : ""
-                  }`}
+                  className={`flex items-center justify-center px-4 sm:px-6 text-white`}
                   style={{
-                    backgroundColor:
-                      paymentType === "SEND_MONEY" ? selectedColor : "#ffffff",
-                    borderBottom:
-                      paymentType === "PAYBILL" ? "none" : undefined,
+                    backgroundColor: selectedColor,
                   }}
                 >
                   <div
-                    className={`w-full text-2xl sm:text-2xl md:text-2xl lg:text-4xl leading-tight font-bold text-center ${
-                      paymentType === "SEND_MONEY" ? "text-white" : "text-black"
-                    } ${showQrCode ? "mr-[25%]" : ""}`}
+                    className={`w-full text-2xl sm:text-2xl md:text-2xl lg:text-4xl leading-tight font-bold text-center ${showQrCode ? "mr-[25%]" : ""}`}
                   >
                     {displayValues.secondaryValue}
                   </div>
