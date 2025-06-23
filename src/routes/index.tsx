@@ -13,6 +13,7 @@ import {
 import { motion } from "motion/react";
 import { ColorPicker } from "@/components/ui/color-picker";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Slider } from "@/components/ui/slider";
 import { Card, CardTitle, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { useForm, Controller } from "react-hook-form";
@@ -46,6 +47,7 @@ const formSchema = z
     showName: z.boolean(),
     showQrCode: z.boolean(),
     title: z.string().min(1, "Title cannot be empty"),
+    fontScale: z.number().min(0.7).max(1.8),
   })
   .refine(
     (data) => {
@@ -94,6 +96,7 @@ interface FormValues {
   showName: boolean;
   showQrCode: boolean;
   title: string;
+  fontScale: number;
 }
 
 export const Route = createFileRoute("/")({
@@ -123,6 +126,7 @@ function Home() {
       showName: true,
       showQrCode: true,
       title: "SEND MONEY",
+      fontScale: 1.0,
     },
     mode: "onChange",
   });
@@ -137,6 +141,7 @@ function Home() {
   const showName = watch("showName");
   const showQrCode = watch("showQrCode");
   const title = watch("title");
+  const fontScale = watch("fontScale");
 
   const colorOptions = [
     { name: "Green", value: "#16a34a", class: "bg-green-600" },
@@ -210,6 +215,26 @@ function Home() {
   };
 
   const displayValues = getCurrentDisplayValues();
+
+  // Calculate dynamic font size classes based on fontScale
+  const getDynamicFontSize = (baseSize: string) => {
+    if (fontScale <= 0.8) return "text-lg sm:text-lg md:text-xl lg:text-2xl";
+    if (fontScale <= 0.9) return "text-xl sm:text-xl md:text-2xl lg:text-3xl";
+    if (fontScale <= 1.1) return "text-2xl sm:text-2xl md:text-2xl lg:text-4xl"; // default
+    if (fontScale <= 1.3) return "text-3xl sm:text-3xl md:text-4xl lg:text-5xl";
+    if (fontScale <= 1.5) return "text-4xl sm:text-4xl md:text-5xl lg:text-6xl";
+    return "text-5xl sm:text-5xl md:text-6xl lg:text-7xl";
+  };
+
+  // Calculate dynamic label font size (smaller than main text)
+  const getDynamicLabelFontSize = () => {
+    if (fontScale <= 0.8) return "text-xs sm:text-sm md:text-base lg:text-lg";
+    if (fontScale <= 0.9) return "text-sm sm:text-base md:text-lg lg:text-xl";
+    if (fontScale <= 1.1) return "text-sm sm:text-base md:text-lg lg:text-xl"; // default
+    if (fontScale <= 1.3) return "text-base sm:text-lg md:text-xl lg:text-2xl";
+    if (fontScale <= 1.5) return "text-lg sm:text-xl md:text-2xl lg:text-3xl";
+    return "text-xl sm:text-2xl md:text-3xl lg:text-4xl";
+  };
 
   const onSubmit = handleSubmit(async () => {
     await handleDownload();
@@ -358,10 +383,16 @@ function Home() {
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
 
-      // Adjust font sizes based on template dimensions
-      const titleFontSize = Math.round(Math.min(width, height) * 0.1);
-      const phoneFontSize = Math.round(Math.min(width, height) * 0.11);
-      const nameFontSize = Math.round(Math.min(width, height) * 0.1);
+      // Adjust font sizes based on template dimensions and font scale
+      const titleFontSize = Math.round(
+        Math.min(width, height) * 0.1 * fontScale
+      );
+      const phoneFontSize = Math.round(
+        Math.min(width, height) * 0.11 * fontScale
+      );
+      const nameFontSize = Math.round(
+        Math.min(width, height) * 0.1 * fontScale
+      );
       const labelFontSize = Math.round(titleFontSize * 0.75); // Increased from 0.5 to 0.75 of title font
 
       // Calculate section centers dynamically
@@ -926,6 +957,30 @@ function Home() {
 
               {/* Common Options Outside Tabs */}
               <div className="space-y-4 mt-6">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-3">
+                    Font Size: {Math.round(fontScale * 100)}%
+                  </label>
+                  <Controller
+                    name="fontScale"
+                    control={control}
+                    render={({ field }) => (
+                      <Slider
+                        value={[field.value]}
+                        onValueChange={(value) => field.onChange(value[0])}
+                        min={0.7}
+                        max={1.8}
+                        step={0.1}
+                        className="w-full"
+                      />
+                    )}
+                  />
+                  <div className="flex justify-between text-xs text-gray-500 mt-1">
+                    <span>70%</span>
+                    <span>100%</span>
+                    <span>180%</span>
+                  </div>
+                </div>
                 {paymentType === "SEND_MONEY" && (
                   <div className="flex items-center space-x-2 mb-2">
                     <Controller
@@ -1109,7 +1164,7 @@ function Home() {
                 style={{ backgroundColor: selectedColor }}
               >
                 <h2
-                  className={`text-2xl sm:text-2xl md:text-2xl lg:text-4xl leading-tight select-none font-bold text-white text-center ${showQrCode ? "mr-[25%]" : ""}`}
+                  className={`${getDynamicFontSize("title")} leading-tight select-none font-bold text-white text-center ${showQrCode ? "mr-[25%]" : ""}`}
                 >
                   {title}
                 </h2>
@@ -1121,7 +1176,7 @@ function Home() {
                   {/* First Black Section - Primary Value Label */}
                   <div className="bg-black flex items-center justify-center px-4 py-2">
                     <div
-                      className={`w-1/2 text-sm sm:text-base md:text-lg font-bold text-white text-center ${showQrCode ? "mr-[25%]" : ""}`}
+                      className={`w-1/2 ${getDynamicLabelFontSize()} font-bold text-white text-center ${showQrCode ? "mr-[25%]" : ""}`}
                     >
                       {getPrimaryValueLabel()}
                     </div>
@@ -1144,7 +1199,7 @@ function Home() {
                 }}
               >
                 <div
-                  className={`w-full text-2xl sm:text-2xl md:text-2xl lg:text-4xl leading-tight font-bold text-center ${showQrCode ? "mr-[25%]" : ""}`}
+                  className={`w-full ${getDynamicFontSize("primary")} leading-tight font-bold text-center ${showQrCode ? "mr-[25%]" : ""}`}
                 >
                   {displayValues.primaryValue}
                 </div>
@@ -1154,7 +1209,7 @@ function Home() {
               {paymentType === "PAYBILL" && (
                 <div className="bg-black flex items-center justify-center px-4 py-2">
                   <div
-                    className={`w-1/2 text-sm sm:text-base md:text-lg font-bold text-white text-center ${showQrCode ? "mr-[25%]" : ""}`}
+                    className={`w-1/2 ${getDynamicLabelFontSize()} font-bold text-white text-center ${showQrCode ? "mr-[25%]" : ""}`}
                   >
                     {getSecondaryValueLabel()}
                   </div>
@@ -1171,7 +1226,7 @@ function Home() {
                   }}
                 >
                   <div
-                    className={`w-full text-2xl sm:text-2xl md:text-2xl lg:text-4xl leading-tight font-bold text-center ${showQrCode ? "mr-[25%]" : ""}`}
+                    className={`w-full ${getDynamicFontSize("secondary")} leading-tight font-bold text-center ${showQrCode ? "mr-[25%]" : ""}`}
                   >
                     {displayValues.secondaryValue}
                   </div>
