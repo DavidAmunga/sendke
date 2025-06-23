@@ -217,7 +217,7 @@ function Home() {
   const displayValues = getCurrentDisplayValues();
 
   // Calculate dynamic font size classes based on fontScale
-  const getDynamicFontSize = (baseSize: string) => {
+  const getDynamicFontSize = () => {
     if (fontScale <= 0.8) return "text-lg sm:text-lg md:text-xl lg:text-2xl";
     if (fontScale <= 0.9) return "text-xl sm:text-xl md:text-2xl lg:text-3xl";
     if (fontScale <= 1.1) return "text-2xl sm:text-2xl md:text-2xl lg:text-4xl"; // default
@@ -1164,7 +1164,7 @@ function Home() {
                 style={{ backgroundColor: selectedColor }}
               >
                 <h2
-                  className={`${getDynamicFontSize("title")} leading-tight select-none font-bold text-white text-center ${showQrCode ? "mr-[25%]" : ""}`}
+                  className={`${getDynamicFontSize()} leading-tight select-none font-bold text-white text-center ${showQrCode ? "mr-[25%]" : ""}`}
                 >
                   {title}
                 </h2>
@@ -1199,7 +1199,7 @@ function Home() {
                 }}
               >
                 <div
-                  className={`w-full ${getDynamicFontSize("primary")} leading-tight font-bold text-center ${showQrCode ? "mr-[25%]" : ""}`}
+                  className={`w-full ${getDynamicFontSize()} leading-tight font-bold text-center ${showQrCode ? "mr-[25%]" : ""}`}
                 >
                   {displayValues.primaryValue}
                 </div>
@@ -1226,7 +1226,7 @@ function Home() {
                   }}
                 >
                   <div
-                    className={`w-full ${getDynamicFontSize("secondary")} leading-tight font-bold text-center ${showQrCode ? "mr-[25%]" : ""}`}
+                    className={`w-full ${getDynamicFontSize()} leading-tight font-bold text-center ${showQrCode ? "mr-[25%]" : ""}`}
                   >
                     {displayValues.secondaryValue}
                   </div>
