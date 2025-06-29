@@ -866,9 +866,7 @@ function Home() {
                                     /\D/g,
                                     ""
                                   );
-                                  if (value.length <= 10) {
-                                    field.onChange(formatBusinessNumber(value));
-                                  }
+                                  field.onChange(formatBusinessNumber(value));
                                 }}
                                 className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:outline-none text-lg font-semibold"
                                 placeholder="123 456"
