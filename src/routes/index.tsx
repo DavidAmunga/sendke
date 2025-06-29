@@ -163,25 +163,12 @@ function Home() {
     const numbers = value.replace(/\D/g, "");
     if (numbers.length === 0) return "";
 
-    // Format numbers into groups of 3-4 digits
-    if (numbers.length <= 3) {
-      return numbers;
-    } else if (numbers.length <= 6) {
-      // Split into two groups of 3
-      return numbers.replace(/(\d{3})(\d{1,3})/, "$1 $2");
-    } else if (numbers.length <= 7) {
-      // Split into 3 + 4
-      return numbers.replace(/(\d{3})(\d{1,4})/, "$1 $2");
-    } else if (numbers.length <= 8) {
-      // Split into 4 + 4
-      return numbers.replace(/(\d{4})(\d{1,4})/, "$1 $2");
-    } else if (numbers.length <= 9) {
-      // Split into 3 + 3 + 3
-      return numbers.replace(/(\d{3})(\d{3})(\d{1,3})/, "$1 $2 $3");
-    } else {
-      // For longer numbers, split into 3 + 3 + 4
-      return numbers.replace(/(\d{3})(\d{3})(\d{1,4})/, "$1 $2 $3");
+    // Format numbers into groups of 4 digits
+    const groups = [];
+    for (let i = 0; i < numbers.length; i += 4) {
+      groups.push(numbers.slice(i, i + 4));
     }
+    return groups.join(" ");
   };
 
   // Get current display values based on payment type
