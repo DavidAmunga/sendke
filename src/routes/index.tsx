@@ -163,6 +163,31 @@ function Home() {
     const numbers = value.replace(/\D/g, "");
     if (numbers.length === 0) return "";
 
+    // Format numbers into groups of 3-4 digits
+    if (numbers.length <= 3) {
+      return numbers;
+    } else if (numbers.length <= 6) {
+      // Split into two groups of 3
+      return numbers.replace(/(\d{3})(\d{1,3})/, "$1 $2");
+    } else if (numbers.length <= 7) {
+      // Split into 3 + 4
+      return numbers.replace(/(\d{3})(\d{1,4})/, "$1 $2");
+    } else if (numbers.length <= 8) {
+      // Split into 4 + 4
+      return numbers.replace(/(\d{4})(\d{1,4})/, "$1 $2");
+    } else if (numbers.length <= 9) {
+      // Split into 3 + 3 + 3
+      return numbers.replace(/(\d{3})(\d{3})(\d{1,3})/, "$1 $2 $3");
+    } else {
+      // For longer numbers, split into 3 + 3 + 4
+      return numbers.replace(/(\d{3})(\d{3})(\d{1,4})/, "$1 $2 $3");
+    }
+  };
+
+  const formatAccountNumber = (value: string): string => {
+    const numbers = value.replace(/\D/g, "");
+    if (numbers.length === 0) return "";
+
     // Format numbers into groups of 4 digits
     const groups = [];
     for (let i = 0; i < numbers.length; i += 4) {
@@ -183,7 +208,7 @@ function Home() {
       case "PAYBILL":
         return {
           primaryValue: formatBusinessNumber(paybillNumber || "123456"),
-          secondaryValue: formatBusinessNumber(accountNumber || "123456"),
+          secondaryValue: formatAccountNumber(accountNumber || "123456"),
           qrData: `PB|${(paybillNumber || "123456").replace(/\s/g, "")}|${(accountNumber || "123456").replace(/\s/g, "")}`,
         };
       case "TILL_NUMBER":
@@ -714,6 +739,7 @@ function Home() {
                             render={({ field }) => (
                               <Input
                                 id="title"
+                                autoComplete="off"
                                 type="text"
                                 value={field.value}
                                 onChange={field.onChange}
@@ -743,6 +769,7 @@ function Home() {
                               <Input
                                 id="phone"
                                 type="text"
+                                autoComplete="off"
                                 value={field.value || ""}
                                 onChange={(e) => {
                                   const value = e.target.value.replace(
@@ -783,6 +810,7 @@ function Home() {
                               <Input
                                 id="title"
                                 type="text"
+                                autoComplete="off"
                                 value={field.value}
                                 onChange={field.onChange}
                                 className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:outline-none text-lg font-semibold"
@@ -811,6 +839,7 @@ function Home() {
                               <Input
                                 id="paybill"
                                 type="text"
+                                autoComplete="off"
                                 value={field.value || ""}
                                 onChange={(e) => {
                                   const value = e.target.value.replace(
@@ -853,8 +882,9 @@ function Home() {
                                     /\D/g,
                                     ""
                                   );
-                                  field.onChange(formatBusinessNumber(value));
+                                  field.onChange(formatAccountNumber(value));
                                 }}
+                                autoComplete="off"
                                 className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:outline-none text-lg font-semibold"
                                 placeholder="123 456"
                               />
