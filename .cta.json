@@ -1,0 +1,14 @@
+{
+  "projectName": "send-ke",
+  "mode": "file-router",
+  "typescript": true,
+  "tailwind": true,
+  "packageManager": "npm",
+  "git": true,
+  "version": 1,
+  "framework": "react-cra",
+  "chosenAddOns": [
+    "start",
+    "shadcn"
+  ]
+}

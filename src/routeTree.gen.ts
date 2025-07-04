@@ -8,76 +8,32 @@
 // You should NOT make any changes in this file as it will be overwritten.
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
-// Import Routes
+import { Route as rootRouteImport } from './routes/__root'
+import { Route as PhoneNumberRouteImport } from './routes/$phoneNumber'
+import { Route as IndexRouteImport } from './routes/index'
+import { Route as BGTillNumberRouteImport } from './routes/BG.$tillNumber'
+import { Route as PBPaybillAccountNumberRouteImport } from './routes/PB.$paybill.$accountNumber'
 
-import { Route as rootRoute } from './routes/__root'
-import { Route as PhoneNumberImport } from './routes/$phoneNumber'
-import { Route as IndexImport } from './routes/index'
-import { Route as BGTillNumberImport } from './routes/BG.$tillNumber'
-import { Route as PBPaybillAccountNumberImport } from './routes/PB.$paybill.$accountNumber'
-
-// Create/Update Routes
-
-const PhoneNumberRoute = PhoneNumberImport.update({
+const PhoneNumberRoute = PhoneNumberRouteImport.update({
   id: '/$phoneNumber',
   path: '/$phoneNumber',
-  getParentRoute: () => rootRoute,
+  getParentRoute: () => rootRouteImport,
 } as any)
-
-const IndexRoute = IndexImport.update({
+const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
-  getParentRoute: () => rootRoute,
+  getParentRoute: () => rootRouteImport,
 } as any)
-
-const BGTillNumberRoute = BGTillNumberImport.update({
+const BGTillNumberRoute = BGTillNumberRouteImport.update({
   id: '/BG/$tillNumber',
   path: '/BG/$tillNumber',
-  getParentRoute: () => rootRoute,
+  getParentRoute: () => rootRouteImport,
 } as any)
-
-const PBPaybillAccountNumberRoute = PBPaybillAccountNumberImport.update({
+const PBPaybillAccountNumberRoute = PBPaybillAccountNumberRouteImport.update({
   id: '/PB/$paybill/$accountNumber',
   path: '/PB/$paybill/$accountNumber',
-  getParentRoute: () => rootRoute,
+  getParentRoute: () => rootRouteImport,
 } as any)
-
-// Populate the FileRoutesByPath interface
-
-declare module '@tanstack/react-router' {
-  interface FileRoutesByPath {
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexImport
-      parentRoute: typeof rootRoute
-    }
-    '/$phoneNumber': {
-      id: '/$phoneNumber'
-      path: '/$phoneNumber'
-      fullPath: '/$phoneNumber'
-      preLoaderRoute: typeof PhoneNumberImport
-      parentRoute: typeof rootRoute
-    }
-    '/BG/$tillNumber': {
-      id: '/BG/$tillNumber'
-      path: '/BG/$tillNumber'
-      fullPath: '/BG/$tillNumber'
-      preLoaderRoute: typeof BGTillNumberImport
-      parentRoute: typeof rootRoute
-    }
-    '/PB/$paybill/$accountNumber': {
-      id: '/PB/$paybill/$accountNumber'
-      path: '/PB/$paybill/$accountNumber'
-      fullPath: '/PB/$paybill/$accountNumber'
-      preLoaderRoute: typeof PBPaybillAccountNumberImport
-      parentRoute: typeof rootRoute
-    }
-  }
-}
-
-// Create and export the route tree
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -85,22 +41,19 @@ export interface FileRoutesByFullPath {
   '/BG/$tillNumber': typeof BGTillNumberRoute
   '/PB/$paybill/$accountNumber': typeof PBPaybillAccountNumberRoute
 }
-
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/$phoneNumber': typeof PhoneNumberRoute
   '/BG/$tillNumber': typeof BGTillNumberRoute
   '/PB/$paybill/$accountNumber': typeof PBPaybillAccountNumberRoute
 }
-
 export interface FileRoutesById {
-  __root__: typeof rootRoute
+  __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/$phoneNumber': typeof PhoneNumberRoute
   '/BG/$tillNumber': typeof BGTillNumberRoute
   '/PB/$paybill/$accountNumber': typeof PBPaybillAccountNumberRoute
 }
-
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
@@ -118,12 +71,44 @@ export interface FileRouteTypes {
     | '/PB/$paybill/$accountNumber'
   fileRoutesById: FileRoutesById
 }
-
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   PhoneNumberRoute: typeof PhoneNumberRoute
   BGTillNumberRoute: typeof BGTillNumberRoute
   PBPaybillAccountNumberRoute: typeof PBPaybillAccountNumberRoute
+}
+
+declare module '@tanstack/react-router' {
+  interface FileRoutesByPath {
+    '/$phoneNumber': {
+      id: '/$phoneNumber'
+      path: '/$phoneNumber'
+      fullPath: '/$phoneNumber'
+      preLoaderRoute: typeof PhoneNumberRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/BG/$tillNumber': {
+      id: '/BG/$tillNumber'
+      path: '/BG/$tillNumber'
+      fullPath: '/BG/$tillNumber'
+      preLoaderRoute: typeof BGTillNumberRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/PB/$paybill/$accountNumber': {
+      id: '/PB/$paybill/$accountNumber'
+      path: '/PB/$paybill/$accountNumber'
+      fullPath: '/PB/$paybill/$accountNumber'
+      preLoaderRoute: typeof PBPaybillAccountNumberRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+  }
 }
 
 const rootRouteChildren: RootRouteChildren = {
@@ -132,35 +117,6 @@ const rootRouteChildren: RootRouteChildren = {
   BGTillNumberRoute: BGTillNumberRoute,
   PBPaybillAccountNumberRoute: PBPaybillAccountNumberRoute,
 }
-
-export const routeTree = rootRoute
+export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-/* ROUTE_MANIFEST_START
-{
-  "routes": {
-    "__root__": {
-      "filePath": "__root.tsx",
-      "children": [
-        "/",
-        "/$phoneNumber",
-        "/BG/$tillNumber",
-        "/PB/$paybill/$accountNumber"
-      ]
-    },
-    "/": {
-      "filePath": "index.tsx"
-    },
-    "/$phoneNumber": {
-      "filePath": "$phoneNumber.tsx"
-    },
-    "/BG/$tillNumber": {
-      "filePath": "BG.$tillNumber.tsx"
-    },
-    "/PB/$paybill/$accountNumber": {
-      "filePath": "PB.$paybill.$accountNumber.tsx"
-    }
-  }
-}
-ROUTE_MANIFEST_END */

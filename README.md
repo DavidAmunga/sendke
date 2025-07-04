@@ -1,133 +1,299 @@
-# send.ke
+Welcome to your new TanStack app! 
 
-<p align="center">
-  <img src="public/sendke_ogimage.jpg" alt="send.ke banner" width="600">
-</p>
+# Getting Started
 
-## Make Mobile Payment Posters in Seconds
-
-**send.ke** is a free, offline-capable web tool that lets you create beautiful payment posters with any mobile money payment method and name. Perfect for businesses, street vendors, freelancers, and anyone who needs to receive mobile payments.
-
-## 🔗 [Visit send.ke](https://send.ke)
-
-## ✨ Features
-
-- **100% Free** - No hidden costs, no premium features
-- **Works Offline** - Create posters even without an internet connection
-- **No Account Required** - Just enter your details and download
-- **Instant Downloads** - Get your poster in seconds
-- **High-Quality Images** - Professional-looking posters every time
-- **Mobile Friendly** - Works on all devices
-
-## 📱 What is a Payment Poster?
-
-A payment poster is a simple, effective way to display your mobile money details. Instead of complicated QR codes, customers just:
-
-1. See your phone number / till / paybill
-2. Send money directly to it
-3. That's it!
-
-Perfect for places where mobile money is popular but QR codes are not widely used.
-
-## 🚀 How to Use
-
-1. Enter your phone number / till / paybill
-2. Enter your name
-3. Click "GET YOUR MONEY POSTER"
-4. Share the downloaded image:
-   - Print it for your shop/stall
-   - Share it on social media
-   - Add it to your invoices
-   - Send it via WhatsApp or other messaging apps
-
-## 💻 Development
-
-### Prerequisites
-
-- Node.js 18+
-- npm or yarn
-
-### Installation
+To run this application:
 
 ```bash
-# Clone the repository
-git clone https://github.com/DavidAmunga/sendke.git
-cd sendke
-
-# Install dependencies
 npm install
-# or
-yarn
-
-# Start development server
-npm run dev
-# or
-yarn dev
+npm run start  
 ```
 
-### Building for Production
+# Building For Production
+
+To build this application for production:
 
 ```bash
 npm run build
-# or
-yarn build
 ```
 
-## 🌍 Contributing New Business Templates
+## Testing
 
-We welcome contributions of new business templates for different types of small businesses in Kenya and beyond! Help make send.ke more useful for everyone.
+This project uses [Vitest](https://vitest.dev/) for testing. You can run the tests with:
 
-### How to Add a New Template
+```bash
+npm run test
+```
 
-1. Fork the repository
-2. Edit the `src/data/templates.json` file to add your new business type
-3. Follow this format for each new entry:
+## Styling
 
-```json
-{
-  "name": "Business Name", // Display name (e.g., "Mitumba Seller")
-  "slug": "business-slug", // URL-friendly identifier (e.g., "mitumba-seller")
-  "description": "Short description of the business type",
-  "size": {
-    "width": 1200, // Recommended width in pixels
-    "height": 675, // Recommended height in pixels
-    "label": "Standard Format" // Format label (typically "Standard Format" or "Other Format")
-  }
+This project uses [Tailwind CSS](https://tailwindcss.com/) for styling.
+
+
+
+## Shadcn
+
+Add components using the latest version of [Shadcn](https://ui.shadcn.com/).
+
+```bash
+pnpx shadcn@latest add button
+```
+
+
+
+## Routing
+This project uses [TanStack Router](https://tanstack.com/router). The initial setup is a file based router. Which means that the routes are managed as files in `src/routes`.
+
+### Adding A Route
+
+To add a new route to your application just add another a new file in the `./src/routes` directory.
+
+TanStack will automatically generate the content of the route file for you.
+
+Now that you have two routes you can use a `Link` component to navigate between them.
+
+### Adding Links
+
+To use SPA (Single Page Application) navigation you will need to import the `Link` component from `@tanstack/react-router`.
+
+```tsx
+import { Link } from "@tanstack/react-router";
+```
+
+Then anywhere in your JSX you can use it like so:
+
+```tsx
+<Link to="/about">About</Link>
+```
+
+This will create a link that will navigate to the `/about` route.
+
+More information on the `Link` component can be found in the [Link documentation](https://tanstack.com/router/v1/docs/framework/react/api/router/linkComponent).
+
+### Using A Layout
+
+In the File Based Routing setup the layout is located in `src/routes/__root.tsx`. Anything you add to the root route will appear in all the routes. The route content will appear in the JSX where you use the `<Outlet />` component.
+
+Here is an example layout that includes a header:
+
+```tsx
+import { Outlet, createRootRoute } from '@tanstack/react-router'
+import { TanStackRouterDevtools } from '@tanstack/react-router-devtools'
+
+import { Link } from "@tanstack/react-router";
+
+export const Route = createRootRoute({
+  component: () => (
+    <>
+      <header>
+        <nav>
+          <Link to="/">Home</Link>
+          <Link to="/about">About</Link>
+        </nav>
+      </header>
+      <Outlet />
+      <TanStackRouterDevtools />
+    </>
+  ),
+})
+```
+
+The `<TanStackRouterDevtools />` component is not required so you can remove it if you don't want it in your layout.
+
+More information on layouts can be found in the [Layouts documentation](https://tanstack.com/router/latest/docs/framework/react/guide/routing-concepts#layouts).
+
+
+## Data Fetching
+
+There are multiple ways to fetch data in your application. You can use TanStack Query to fetch data from a server. But you can also use the `loader` functionality built into TanStack Router to load the data for a route before it's rendered.
+
+For example:
+
+```tsx
+const peopleRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/people",
+  loader: async () => {
+    const response = await fetch("https://swapi.dev/api/people");
+    return response.json() as Promise<{
+      results: {
+        name: string;
+      }[];
+    }>;
+  },
+  component: () => {
+    const data = peopleRoute.useLoaderData();
+    return (
+      <ul>
+        {data.results.map((person) => (
+          <li key={person.name}>{person.name}</li>
+        ))}
+      </ul>
+    );
+  },
+});
+```
+
+Loaders simplify your data fetching logic dramatically. Check out more information in the [Loader documentation](https://tanstack.com/router/latest/docs/framework/react/guide/data-loading#loader-parameters).
+
+### React-Query
+
+React-Query is an excellent addition or alternative to route loading and integrating it into you application is a breeze.
+
+First add your dependencies:
+
+```bash
+npm install @tanstack/react-query @tanstack/react-query-devtools
+```
+
+Next we'll need to create a query client and provider. We recommend putting those in `main.tsx`.
+
+```tsx
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+
+// ...
+
+const queryClient = new QueryClient();
+
+// ...
+
+if (!rootElement.innerHTML) {
+  const root = ReactDOM.createRoot(rootElement);
+
+  root.render(
+    <QueryClientProvider client={queryClient}>
+      <RouterProvider router={router} />
+    </QueryClientProvider>
+  );
 }
 ```
 
-4. Submit a pull request with your changes
-5. In your PR description, include:
-   - Why this business type would benefit from send.ke
-   - Any specific sizing considerations for this business
+You can also add TanStack Query Devtools to the root route (optional).
 
-We especially welcome templates for small, one-person businesses in the informal sector!
+```tsx
+import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 
-## 🛠️ Technologies Used
+const rootRoute = createRootRoute({
+  component: () => (
+    <>
+      <Outlet />
+      <ReactQueryDevtools buttonPosition="top-right" />
+      <TanStackRouterDevtools />
+    </>
+  ),
+});
+```
 
-- React
-- TypeScript
-- Vite
-- Tailwind CSS
-- html2canvas
+Now you can use `useQuery` to fetch your data.
 
-## 📄 License
+```tsx
+import { useQuery } from "@tanstack/react-query";
 
-This project is open source and available under the [MIT License](LICENSE).
+import "./App.css";
 
-## 🤝 Contributing
+function App() {
+  const { data } = useQuery({
+    queryKey: ["people"],
+    queryFn: () =>
+      fetch("https://swapi.dev/api/people")
+        .then((res) => res.json())
+        .then((data) => data.results as { name: string }[]),
+    initialData: [],
+  });
 
-Contributions, issues, and feature requests are welcome! Feel free to check the [issues page](https://github.com/DavidAmunga/sendke/issues).
+  return (
+    <div>
+      <ul>
+        {data.map((person) => (
+          <li key={person.name}>{person.name}</li>
+        ))}
+      </ul>
+    </div>
+  );
+}
 
-## 👨‍💻 Author
+export default App;
+```
 
-**David Amunga**
+You can find out everything you need to know on how to use React-Query in the [React-Query documentation](https://tanstack.com/query/latest/docs/framework/react/overview).
 
-- Website: [davidamunga.com](https://davidamunga.com)
-- GitHub: [@DavidAmunga](https://github.com/DavidAmunga)
+## State Management
 
----
+Another common requirement for React applications is state management. There are many options for state management in React. TanStack Store provides a great starting point for your project.
 
-<p align="center">
-  Made with ❤️ in Kenya
-</p>
+First you need to add TanStack Store as a dependency:
+
+```bash
+npm install @tanstack/store
+```
+
+Now let's create a simple counter in the `src/App.tsx` file as a demonstration.
+
+```tsx
+import { useStore } from "@tanstack/react-store";
+import { Store } from "@tanstack/store";
+import "./App.css";
+
+const countStore = new Store(0);
+
+function App() {
+  const count = useStore(countStore);
+  return (
+    <div>
+      <button onClick={() => countStore.setState((n) => n + 1)}>
+        Increment - {count}
+      </button>
+    </div>
+  );
+}
+
+export default App;
+```
+
+One of the many nice features of TanStack Store is the ability to derive state from other state. That derived state will update when the base state updates.
+
+Let's check this out by doubling the count using derived state.
+
+```tsx
+import { useStore } from "@tanstack/react-store";
+import { Store, Derived } from "@tanstack/store";
+import "./App.css";
+
+const countStore = new Store(0);
+
+const doubledStore = new Derived({
+  fn: () => countStore.state * 2,
+  deps: [countStore],
+});
+doubledStore.mount();
+
+function App() {
+  const count = useStore(countStore);
+  const doubledCount = useStore(doubledStore);
+
+  return (
+    <div>
+      <button onClick={() => countStore.setState((n) => n + 1)}>
+        Increment - {count}
+      </button>
+      <div>Doubled - {doubledCount}</div>
+    </div>
+  );
+}
+
+export default App;
+```
+
+We use the `Derived` class to create a new store that is derived from another store. The `Derived` class has a `mount` method that will start the derived store updating.
+
+Once we've created the derived store we can use it in the `App` component just like we would any other store using the `useStore` hook.
+
+You can find out everything you need to know on how to use TanStack Store in the [TanStack Store documentation](https://tanstack.com/store/latest).
+
+# Demo files
+
+Files prefixed with `demo` can be safely deleted. They are there to provide a starting point for you to play around with the features you've installed.
+
+# Learn More
+
+You can learn more about all of the offerings from TanStack in the [TanStack documentation](https://tanstack.com).

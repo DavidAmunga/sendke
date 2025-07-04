@@ -1,8 +1,0 @@
-{
-  "rewrites": [
-    {
-      "source": "/((?!api|_next/static|_next/image|favicon.ico|.*\\.(?:css|js|jpg|jpeg|png|gif|svg|ico|woff|woff2|ttf|eot|otf|webp|mp4|webm|ogg|mp3|wav|flac|aac|pdf|doc|docx|xls|xlsx|ppt|pptx|zip|tar|gz|rar|7z|bz2|txt|xml|json|csv|yaml|yml|md|log|manifest.json|robots.txt|sitemap.xml)).*)",
-      "destination": "/index.html"
-    }
-  ]
-}
