@@ -5,8 +5,6 @@ import {
   CheckIcon,
   GithubIcon,
   LockIcon,
-  ChevronLeftIcon,
-  ChevronRightIcon,
   QrCodeIcon,
   InfoIcon,
 } from "lucide-react";
@@ -16,12 +14,10 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Slider } from "@/components/ui/slider";
 import { Card, CardTitle, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { useForm, Controller } from "react-hook-form";
+import { useForm, Controller, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
 import templates from "@/data/templates.json";
-import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
-import { QRCodeSVG } from "qrcode.react";
+import { BsTwitterX } from "react-icons/bs";
 import {
   Tooltip,
   TooltipContent,
@@ -29,75 +25,10 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import QRCode from "qrcode";
-
-// Define payment types
-type PaymentType = "SEND_MONEY" | "PAYBILL" | "TILL_NUMBER";
-
-// Define zod schema for validation
-const formSchema = z
-  .object({
-    paymentType: z.enum(["SEND_MONEY", "PAYBILL", "TILL_NUMBER"]),
-    phoneNumber: z.string().optional(),
-    paybillNumber: z.string().optional(),
-    accountNumber: z.string().optional(),
-    tillNumber: z.string().optional(),
-    name: z.string().optional(),
-    selectedColor: z.string(),
-    showName: z.boolean(),
-    showQrCode: z.boolean(),
-    title: z.string().min(1, "Title cannot be empty"),
-    fontScale: z.number().min(0.7).max(1.8),
-  })
-  .refine(
-    (data) => {
-      // Validation based on payment type
-      if (data.paymentType === "SEND_MONEY") {
-        if (
-          !data.phoneNumber ||
-          data.phoneNumber.replace(/\s/g, "").length < 10
-        ) {
-          return false;
-        }
-        // If showName is true, name must not be empty
-        if (data.showName && (!data.name || data.name.trim().length === 0)) {
-          return false;
-        }
-      } else if (data.paymentType === "PAYBILL") {
-        if (!data.paybillNumber || data.paybillNumber.trim().length === 0) {
-          return false;
-        }
-        if (!data.accountNumber || data.accountNumber.trim().length === 0) {
-          return false;
-        }
-      } else if (data.paymentType === "TILL_NUMBER") {
-        if (!data.tillNumber || data.tillNumber.trim().length === 0) {
-          return false;
-        }
-      }
-      return true;
-    },
-    {
-      message:
-        "Please fill in all required fields for the selected payment type",
-      path: ["phoneNumber"], // This will be overridden by specific field validation
-    }
-  );
-
-// Define form type
-interface FormValues {
-  paymentType: PaymentType;
-  phoneNumber?: string;
-  paybillNumber?: string;
-  accountNumber?: string;
-  tillNumber?: string;
-  name?: string;
-  selectedColor: string;
-  showName: boolean;
-  showQrCode: boolean;
-  title: string;
-  fontScale: number;
-}
+import type { PaymentForm, PaymentType, Template } from "@/types/PaymentForm";
+import { FORM_DEFAULT_VALUES, formSchema } from "@/schemas/form";
+import { PosterPreview } from "@/components/poster-preview";
+import { downloadPoster } from "@/utils/poster-download";
 
 export const Route = createFileRoute("/")({
   component: Home,
@@ -110,38 +41,30 @@ function Home() {
   const {
     control,
     handleSubmit,
-    watch,
     setValue,
     formState: { errors, isValid },
-  } = useForm<FormValues>({
+  } = useForm<PaymentForm>({
     resolver: zodResolver(formSchema),
-    defaultValues: {
-      paymentType: "SEND_MONEY",
-      phoneNumber: "",
-      paybillNumber: "",
-      accountNumber: "",
-      tillNumber: "",
-      name: "",
-      selectedColor: "#16a34a",
-      showName: true,
-      showQrCode: true,
-      title: "SEND MONEY",
-      fontScale: 1.0,
-    },
+    defaultValues: FORM_DEFAULT_VALUES,
     mode: "onChange",
   });
 
-  const paymentType = watch("paymentType");
-  const phoneNumber = watch("phoneNumber");
-  const paybillNumber = watch("paybillNumber");
-  const accountNumber = watch("accountNumber");
-  const tillNumber = watch("tillNumber");
-  const name = watch("name");
-  const selectedColor = watch("selectedColor");
-  const showName = watch("showName");
-  const showQrCode = watch("showQrCode");
-  const title = watch("title");
-  const fontScale = watch("fontScale");
+  const {
+    paymentType,
+    phoneNumber,
+    paybillNumber,
+    accountNumber,
+    tillNumber,
+    name,
+    selectedColor,
+    showName,
+    showQrCode,
+    title,
+    fontScale = 1.0,
+  } = useWatch({
+    control,
+    defaultValue: FORM_DEFAULT_VALUES,
+  });
 
   const colorOptions = [
     { name: "Green", value: "#16a34a", class: "bg-green-600" },
@@ -228,380 +151,22 @@ function Home() {
 
   const displayValues = getCurrentDisplayValues();
 
-  // Calculate dynamic font size classes based on fontScale
-  const getDynamicFontSize = () => {
-    if (fontScale <= 0.8) return "text-lg sm:text-lg md:text-xl lg:text-2xl";
-    if (fontScale <= 0.9) return "text-xl sm:text-xl md:text-2xl lg:text-3xl";
-    if (fontScale <= 1.1) return "text-2xl sm:text-2xl md:text-2xl lg:text-4xl"; // default
-    if (fontScale <= 1.3) return "text-3xl sm:text-3xl md:text-4xl lg:text-5xl";
-    if (fontScale <= 1.5) return "text-4xl sm:text-4xl md:text-5xl lg:text-6xl";
-    return "text-5xl sm:text-5xl md:text-6xl lg:text-7xl";
-  };
-
-  // Calculate dynamic label font size (smaller than main text)
-  const getDynamicLabelFontSize = () => {
-    if (fontScale <= 0.8) return "text-xs sm:text-sm md:text-base lg:text-lg";
-    if (fontScale <= 0.9) return "text-sm sm:text-base md:text-lg lg:text-xl";
-    if (fontScale <= 1.1) return "text-sm sm:text-base md:text-lg lg:text-xl"; // default
-    if (fontScale <= 1.3) return "text-base sm:text-lg md:text-xl lg:text-2xl";
-    if (fontScale <= 1.5) return "text-lg sm:text-xl md:text-2xl lg:text-3xl";
-    return "text-xl sm:text-2xl md:text-3xl lg:text-4xl";
-  };
-
   const onSubmit = handleSubmit(async () => {
     await handleDownload();
   });
 
   const handleDownload = async () => {
-    if (!posterRef.current) return;
-
-    try {
-      // Ensure Inter font is loaded before drawing
-      await document.fonts.load("bold 120px Inter");
-
-      // Create canvas with dimensions from selected template
-      const canvas = document.createElement("canvas");
-      const width = selectedTemplate.size.width;
-      const height = selectedTemplate.size.height;
-      canvas.width = width;
-      canvas.height = height;
-
-      const ctx = canvas.getContext("2d");
-      if (!ctx) {
-        console.error("Unable to get canvas context");
-        return;
-      }
-
-      // Colors
-      const mainColor = selectedColor;
-      const borderColor = "#1a2335";
-      const whiteColor = "#ffffff";
-      const blackColor = "#000000";
-
-      const borderSize = 8;
-
-      // Adjust heights based on payment type and name display
-      const hasSecondarySection =
-        (paymentType === "SEND_MONEY" && showName) || paymentType === "PAYBILL";
-      const hasBlackSections = paymentType === "PAYBILL"; // Only Paybill gets black sections
-
-      // Calculate section heights with black dividers
-      let mainSectionHeight, blackSectionHeight;
-
-      if (hasBlackSections) {
-        // Paybill with black sections
-        mainSectionHeight = height * 0.27;
-        blackSectionHeight = height * 0.12;
-      } else {
-        // Send Money or Till Number without black sections
-        mainSectionHeight = hasSecondarySection ? height / 3 : height / 2;
-        blackSectionHeight = 0;
-      }
-
-      // Calculate QR code space if enabled
-      const qrCodeSize = showQrCode ? width * 0.25 : 0;
-
-      // Draw outer border
-      ctx.fillStyle = borderColor;
-      ctx.fillRect(0, 0, width, height);
-
-      let currentY = borderSize;
-
-      // Draw top section (colored with header)
-      ctx.fillStyle = mainColor;
-      ctx.fillRect(
-        borderSize,
-        currentY,
-        width - 2 * borderSize,
-        mainSectionHeight
-      );
-      currentY += mainSectionHeight;
-
-      // Draw first black section (primary value label) - only for Paybill
-      if (hasBlackSections) {
-        ctx.fillStyle = blackColor;
-        ctx.fillRect(
-          borderSize,
-          currentY,
-          width - 2 * borderSize,
-          blackSectionHeight
-        );
-        currentY += blackSectionHeight;
-      }
-
-      // Draw middle section (white with primary value)
-      ctx.fillStyle = whiteColor;
-      ctx.fillRect(
-        borderSize,
-        currentY,
-        width - 2 * borderSize,
-        mainSectionHeight
-      );
-      currentY += mainSectionHeight;
-
-      // Draw second black section and bottom section if there's a secondary value
-      if (hasSecondarySection) {
-        // Draw second black section (secondary value label) - only for Paybill
-        if (hasBlackSections) {
-          ctx.fillStyle = blackColor;
-          ctx.fillRect(
-            borderSize,
-            currentY,
-            width - 2 * borderSize,
-            blackSectionHeight
-          );
-          currentY += blackSectionHeight;
-        }
-
-        // Draw bottom section (colored with secondary value)
-        ctx.fillStyle = mainColor;
-        ctx.fillRect(
-          borderSize,
-          currentY,
-          width - 2 * borderSize,
-          mainSectionHeight
-        );
-      }
-
-      // Draw horizontal borders for non-Paybill payment types
-      if (!hasBlackSections) {
-        const borderThickness = 15;
-        ctx.fillStyle = borderColor;
-
-        // Reset currentY for border drawing
-        let borderCurrentY = borderSize + mainSectionHeight;
-
-        // Draw top border of middle section
-        ctx.fillRect(
-          borderSize,
-          borderCurrentY - borderThickness / 2,
-          width - 2 * borderSize,
-          borderThickness
-        );
-
-        // Draw bottom border of middle section if there's a secondary section
-        if (hasSecondarySection) {
-          borderCurrentY += mainSectionHeight;
-          ctx.fillRect(
-            borderSize,
-            borderCurrentY - borderThickness / 2,
-            width - 2 * borderSize,
-            borderThickness
-          );
-        }
-      }
-
-      // Set text properties
-      ctx.textAlign = "center";
-      ctx.textBaseline = "middle";
-
-      // Adjust font sizes based on template dimensions and font scale
-      const titleFontSize = Math.round(
-        Math.min(width, height) * 0.1 * fontScale
-      );
-      const phoneFontSize = Math.round(
-        Math.min(width, height) * 0.11 * fontScale
-      );
-      const nameFontSize = Math.round(
-        Math.min(width, height) * 0.1 * fontScale
-      );
-      const labelFontSize = Math.round(titleFontSize * 0.75); // Increased from 0.5 to 0.75 of title font
-
-      // Calculate section centers dynamically
-      let currentYForText = borderSize;
-
-      // Title section center
-      const titleSectionCenter = currentYForText + mainSectionHeight / 2;
-      currentYForText += mainSectionHeight;
-
-      // First black section center (only for Paybill)
-      let firstBlackSectionCenter = 0;
-      if (hasBlackSections) {
-        firstBlackSectionCenter = currentYForText + blackSectionHeight / 2;
-        currentYForText += blackSectionHeight;
-      }
-
-      // Primary value section center
-      const primaryValueSectionCenter = currentYForText + mainSectionHeight / 2;
-      currentYForText += mainSectionHeight;
-
-      // Second black section center (only for Paybill with secondary section)
-      let secondBlackSectionCenter = 0;
-      if (hasSecondarySection && hasBlackSections) {
-        secondBlackSectionCenter = currentYForText + blackSectionHeight / 2;
-        currentYForText += blackSectionHeight;
-      }
-
-      // Secondary value section center
-      const secondaryValueSectionCenter = hasSecondarySection
-        ? currentYForText + mainSectionHeight / 2
-        : 0;
-
-      // Draw Title text with Inter font
-      ctx.fillStyle = whiteColor;
-      ctx.font = `bold ${titleFontSize}px Inter, sans-serif`;
-      ctx.fillText(
-        title.toUpperCase(),
-        showQrCode ? (width - qrCodeSize) / 2 : width / 2,
-        titleSectionCenter
-      );
-
-      // Draw first black section label (primary value label) - only for Paybill
-      if (hasBlackSections) {
-        ctx.fillStyle = whiteColor;
-        ctx.font = `bold ${labelFontSize}px Inter, sans-serif`;
-        ctx.fillText(
-          getPrimaryValueLabel(),
-          showQrCode ? (width - qrCodeSize) / 2 : width / 2, // Center horizontally
-          firstBlackSectionCenter
-        );
-      }
-
-      // Draw primary value (phone/paybill/till) with Inter font
-      ctx.fillStyle = "#000000";
-      ctx.font = `bold ${phoneFontSize}px Inter, sans-serif`;
-      ctx.fillText(
-        displayValues.primaryValue,
-        showQrCode ? (width - qrCodeSize) / 2 : width / 2,
-        primaryValueSectionCenter
-      );
-
-      // Draw second black section label and secondary value if needed
-      if (hasSecondarySection && displayValues.secondaryValue) {
-        // Draw second black section label (secondary value label) - only for Paybill
-        if (hasBlackSections) {
-          ctx.fillStyle = whiteColor;
-          ctx.font = `bold ${labelFontSize}px Inter, sans-serif`;
-          ctx.fillText(
-            getSecondaryValueLabel(),
-            showQrCode ? (width - qrCodeSize) / 2 : width / 2, // Center horizontally
-            secondBlackSectionCenter
-          );
-        }
-
-        // Draw secondary value (name/account) with Inter font
-        ctx.fillStyle = whiteColor; // White text on colored background
-        ctx.font = `bold ${nameFontSize}px Inter, sans-serif`;
-        ctx.fillText(
-          displayValues.secondaryValue,
-          showQrCode ? (width - qrCodeSize) / 2 : width / 2,
-          secondaryValueSectionCenter
-        );
-      }
-
-      // Draw QR code if enabled
-      if (showQrCode && displayValues.primaryValue) {
-        // Get QR code data based on payment type
-        const qrCodeData = displayValues.qrData;
-        const qrSize = Math.min(height - 2 * borderSize, qrCodeSize) * 0.8;
-
-        // Calculate QR container dimensions
-        const qrContainerWidth = width / 3;
-        const containerHeight = qrSize * 1.4;
-        const containerWidth = qrContainerWidth - 40;
-
-        // Position container at the far right of the page
-        const rightPadding = 0; // Small padding from right edge
-        const containerX = width - containerWidth - rightPadding;
-        const containerY = height / 2 - containerHeight / 2;
-
-        // Calculate center position for QR code within the container
-        const qrX = containerX + (containerWidth - qrSize) / 2;
-        const qrY = containerY + (containerHeight - qrSize) / 2;
-
-        // Add shadow effect (draw shadow before the shape)
-        ctx.save();
-        ctx.shadowColor = "rgba(0,0,0,0.15)";
-        ctx.shadowBlur = 10;
-        ctx.shadowOffsetX = -3;
-        ctx.shadowOffsetY = 3;
-
-        // Draw white background for QR code with rounded left corners
-        ctx.fillStyle = "#FFFFFF";
-        ctx.beginPath();
-        roundRectLeft(
-          ctx,
-          containerX,
-          containerY,
-          containerWidth,
-          containerHeight,
-          15 // corner radius
-        );
-        ctx.closePath();
-        ctx.fill();
-
-        // Reset shadow
-        ctx.restore();
-
-        // Add border to QR container
-        ctx.strokeStyle = "#E5E7EB"; // Light gray border
-        ctx.lineWidth = 1;
-        ctx.beginPath();
-        roundRectLeft(
-          ctx,
-          containerX,
-          containerY,
-          containerWidth,
-          containerHeight,
-          15
-        );
-        ctx.closePath();
-        ctx.stroke();
-
-        // Create a proper QR code using the QRCode library
-        const tempCanvas = document.createElement("canvas");
-        tempCanvas.width = qrSize;
-        tempCanvas.height = qrSize;
-
-        // Use QRCode.toCanvas to generate a real QR code on the temp canvas
-        await new Promise<void>((resolve) => {
-          QRCode.toCanvas(
-            tempCanvas,
-            qrCodeData,
-            {
-              width: qrSize,
-              margin: 0,
-              color: {
-                dark: "#000000",
-                light: "#FFFFFF",
-              },
-              errorCorrectionLevel: "H",
-            },
-            (error: Error | null | undefined) => {
-              if (error) console.error("Error generating QR code:", error);
-              resolve();
-            }
-          );
-        });
-
-        // Draw QR code canvas onto main canvas
-        ctx.drawImage(tempCanvas, qrX, qrY, qrSize, qrSize);
-
-        // Add "SCAN WITH M-PESA" text above QR code
-        ctx.fillStyle = "#000000";
-        ctx.font = `bold ${Math.round(titleFontSize * 0.25)}px Inter, sans-serif`;
-        ctx.textAlign = "center";
-        ctx.fillText(
-          "SCAN WITH M-PESA",
-          containerX + containerWidth / 2,
-          containerY + 20
-        );
-      }
-
-      // Generate download link
-      const dataUrl = canvas.toDataURL("image/png", 1.0);
-      const link = document.createElement("a");
-      const filenameValue = displayValues.primaryValue.replace(/\s/g, "");
-      link.download = `send-ke-${paymentType.toLowerCase()}-${filenameValue}-${
-        selectedTemplate.slug
-      }.png`;
-      link.href = dataUrl;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-    } catch (error) {
-      console.error("Error generating image:", error);
-    }
+    await downloadPoster({
+      posterRef,
+      selectedTemplate,
+      selectedColor: selectedColor || "#16a34a",
+      paymentType: paymentType || "SEND_MONEY",
+      showName: showName || false,
+      showQrCode: showQrCode || false,
+      title: title || "SEND MONEY",
+      fontScale: fontScale || 1.0,
+      displayValues,
+    });
   };
 
   const getPaymentTypeText = () => {
@@ -614,32 +179,6 @@ function Home() {
         return "Till Number";
       default:
         return "Phone Number";
-    }
-  };
-
-  const getPrimaryValueLabel = () => {
-    switch (paymentType) {
-      case "SEND_MONEY":
-        return "PHONE NUMBER";
-      case "PAYBILL":
-        return "PAYBILL NUMBER";
-      case "TILL_NUMBER":
-        return "TILL NUMBER";
-      default:
-        return "PHONE NUMBER";
-    }
-  };
-
-  const getSecondaryValueLabel = () => {
-    switch (paymentType) {
-      case "SEND_MONEY":
-        return showName ? "NAME" : "";
-      case "PAYBILL":
-        return "ACCOUNT NUMBER";
-      case "TILL_NUMBER":
-        return "";
-      default:
-        return "";
     }
   };
 
@@ -1156,210 +695,26 @@ function Home() {
         </div>
 
         {/* Right Column - Poster Preview */}
-        <div className="w-full md:w-1/2 flex flex-col items-center justify-center md:py-12 md:sticky md:top-0 md:h-screen md:overflow-y-auto">
-          <div className="w-full max-w-lg">
-            <div
-              id="poster"
-              ref={posterRef}
-              className="grid bg-white w-full rounded-lg shadow-lg overflow-hidden border-8 border-gray-800 relative"
-              style={{
-                gridTemplateRows:
-                  paymentType === "PAYBILL"
-                    ? "3fr 1.2fr 3fr 1.2fr 3fr"
-                    : paymentType === "SEND_MONEY" && showName
-                      ? "1fr 1fr 1fr"
-                      : "1fr 1fr",
-                aspectRatio: `${selectedTemplate.size.width} / ${selectedTemplate.size.height}`,
-                maxHeight: "400px",
-              }}
-            >
-              {/* Title */}
-              <div
-                className="flex items-center justify-center px-4 sm:px-6"
-                style={{ backgroundColor: selectedColor }}
-              >
-                <h2
-                  className={`${getDynamicFontSize()} leading-tight select-none font-bold text-white text-center ${showQrCode ? "mr-[25%]" : ""}`}
-                >
-                  {title}
-                </h2>
-              </div>
-
-              {/* Conditional Black Sections - Only for Paybill */}
-              {paymentType === "PAYBILL" && (
-                <>
-                  {/* First Black Section - Primary Value Label */}
-                  <div className="bg-black flex items-center justify-center px-4 py-2">
-                    <div
-                      className={`w-1/2 ${getDynamicLabelFontSize()} font-bold text-white text-center ${showQrCode ? "mr-[25%]" : ""}`}
-                    >
-                      {getPrimaryValueLabel()}
-                    </div>
-                  </div>
-                </>
-              )}
-
-              {/* Primary Value Display (Phone/Paybill/Till) */}
-              <div
-                className="bg-white flex items-center justify-center px-4 sm:px-6"
-                style={{
-                  borderTop:
-                    paymentType !== "PAYBILL" ? "8px solid #1a2335" : "none",
-                  borderBottom:
-                    paymentType !== "PAYBILL" &&
-                    paymentType === "SEND_MONEY" &&
-                    showName
-                      ? "8px solid #1a2335"
-                      : "none",
-                }}
-              >
-                <div
-                  className={`w-full ${getDynamicFontSize()} leading-tight font-bold text-center ${showQrCode ? "mr-[25%]" : ""}`}
-                >
-                  {displayValues.primaryValue}
-                </div>
-              </div>
-
-              {/* Second Black Section - Only for Paybill */}
-              {paymentType === "PAYBILL" && (
-                <div className="bg-black flex items-center justify-center px-4 py-2">
-                  <div
-                    className={`w-1/2 ${getDynamicLabelFontSize()} font-bold text-white text-center ${showQrCode ? "mr-[25%]" : ""}`}
-                  >
-                    {getSecondaryValueLabel()}
-                  </div>
-                </div>
-              )}
-
-              {/* Secondary Value Display - conditional rendering */}
-              {((paymentType === "SEND_MONEY" && showName) ||
-                paymentType === "PAYBILL") && (
-                <div
-                  className={`flex items-center justify-center px-4 sm:px-6 text-white`}
-                  style={{
-                    backgroundColor: selectedColor,
-                  }}
-                >
-                  <div
-                    className={`w-full ${getDynamicFontSize()} leading-tight font-bold text-center ${showQrCode ? "mr-[25%]" : ""}`}
-                  >
-                    {displayValues.secondaryValue}
-                  </div>
-                </div>
-              )}
-
-              {/* QR Code Display - conditional rendering */}
-              {showQrCode && (
-                <div className="w-1/3 absolute right-0 top-0 bottom-0 flex flex-col  justify-center bg-transparent">
-                  <div className="bg-white p-3 flex items-center flex-col rounded-l-lg shadow-lg border">
-                    <span className="text-xs text-center font-bold uppercase tracking-wider mb-1">
-                      Scan with M-PESA
-                    </span>
-                    <QRCodeSVG
-                      value={displayValues.qrData}
-                      size={110}
-                      level="H"
-                      fgColor="#000000"
-                      bgColor={"#ffffff"}
-                      includeMargin={false}
-                      className=""
-                    />
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-          <div className="flex flex-col items-start justify-center text-center mt-2">
-            <p className="font-handwriting text-2xl text-gray-600 z-10">
-              Preview of your poster
-            </p>
-          </div>
-
-          {/* Template Selector */}
-          <div className="w-full max-w-lg mt-8">
-            <h3 className="text-lg font-bold text-gray-800 mb-3 flex items-center">
-              Select Template Size
-              <span className="ml-2 text-xs text-gray-500 italic">
-                (scroll horizontally to see more)
-              </span>
-            </h3>
-            <div className="relative w-full rounded-xl overflow-hidden">
-              {/* Left scroll indicator */}
-              <div className="absolute left-0 top-0 bottom-0 w-12 bg-gradient-to-r from-gray-100 to-transparent z-10 pointer-events-none flex items-center justify-start pl-1">
-                <ChevronLeftIcon className="h-6 w-6 text-gray-500 animate-pulse" />
-              </div>
-
-              {/* Right scroll indicator */}
-              <div className="absolute right-0 top-0 bottom-0 w-12 bg-gradient-to-l from-gray-100 to-transparent z-10 pointer-events-none flex items-center justify-end pr-1">
-                <ChevronRightIcon className="h-6 w-6 text-gray-500 animate-pulse" />
-              </div>
-
-              <ScrollArea className="w-full h-[170px] rounded-lg">
-                <div className="flex space-x-4 px-8 py-1 min-w-max">
-                  {templates.map((template) => (
-                    <div
-                      key={template.slug}
-                      onClick={() => setSelectedTemplate(template)}
-                      className={`p-3 rounded-lg cursor-pointer transition-all w-[160px] h-[150px] flex flex-col ${
-                        selectedTemplate.slug === template.slug
-                          ? "bg-gray-800 text-white ring-2 ring-green-500"
-                          : "bg-white hover:bg-gray-100 border border-gray-200"
-                      }`}
-                    >
-                      <div className="font-medium truncate">
-                        {template.name}
-                      </div>
-                      <div className="text-xs mt-1 line-clamp-2 flex-grow">
-                        {template.description}
-                      </div>
-                      <div
-                        className={`text-xs mt-1 font-semibold ${
-                          selectedTemplate.slug === template.slug
-                            ? "text-green-300"
-                            : "text-green-600"
-                        }`}
-                      >
-                        {template.size.label}
-                      </div>
-                      <div
-                        className={`text-xs mt-1 ${
-                          selectedTemplate.slug === template.slug
-                            ? "text-gray-300"
-                            : "text-gray-500"
-                        }`}
-                      >
-                        {template.size.width}×{template.size.height}px
-                      </div>
-                    </div>
-                  ))}
-                </div>
-                <ScrollBar orientation="horizontal" />
-              </ScrollArea>
-            </div>
-          </div>
-        </div>
+        <PosterPreview
+          ref={posterRef}
+          selectedTemplate={selectedTemplate}
+          paymentType={paymentType || "SEND_MONEY"}
+          selectedColor={selectedColor || "#16a34a"}
+          showName={showName || false}
+          showQrCode={showQrCode || false}
+          title={title || "SEND MONEY"}
+          fontScale={fontScale || 1.0}
+          displayValues={displayValues}
+          templates={templates}
+          onTemplateSelect={setSelectedTemplate}
+        />
       </div>
 
       {/* Twitter CTA for Template Contributions */}
-      <div className="w-full py-4 bg-blue-50 border-t border-blue-100 relative z-10">
+      <div className="w-full py-4 bg-gray-50 border-t border-gray-100 relative z-10">
         <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-center sm:justify-between">
           <div className="flex items-center mb-3 sm:mb-0">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-5 w-5 text-blue-500 mr-2"
-              width="24"
-              height="24"
-              viewBox="0 0 24 24"
-              strokeWidth="2"
-              stroke="currentColor"
-              fill="none"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
-              <path d="M4 4l11.733 16h4.267l-11.733 -16z"></path>
-              <path d="M4 20l6.768 -6.768m2.46 -2.46l6.772 -6.772"></path>
-            </svg>
+            <BsTwitterX className="w-4 h-4 mr-2" />
             <span className="font-medium text-gray-700">
               Have a business that needs a template?
             </span>
@@ -1368,40 +723,13 @@ function Home() {
             href="https://x.com/davidamunga_"
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white text-sm font-medium rounded-md transition-colors"
+            className="inline-flex items-center px-4 py-2 bg-gray-800 hover:bg-gray-700 text-white text-sm font-medium rounded-md transition-colors"
           >
-            <svg
-              className="w-4 h-4 mr-2"
-              fill="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"></path>
-            </svg>
+            <BsTwitterX className="w-4 h-4 mr-2 text-white" />
             Tweet @davidamunga_ to suggest new templates
           </a>
         </div>
       </div>
     </div>
   );
-}
-
-// Helper function to draw the path for a rounded rectangle with left corners rounded
-function roundRectLeft(
-  ctx: CanvasRenderingContext2D,
-  x: number,
-  y: number,
-  width: number,
-  height: number,
-  radius: number
-) {
-  if (width < 2 * radius) radius = width / 2;
-  if (height < 2 * radius) radius = height / 2;
-
-  ctx.moveTo(x + radius, y);
-  ctx.lineTo(x + width, y);
-  ctx.lineTo(x + width, y + height);
-  ctx.lineTo(x + radius, y + height);
-  ctx.arcTo(x, y + height, x, y + height - radius, radius);
-  ctx.lineTo(x, y + radius);
-  ctx.arcTo(x, y, x + radius, y, radius);
 }
