@@ -29,7 +29,9 @@ export const Route = createFileRoute("/BG/$tillNumber")({
     };
   },
   head: ({ loaderData }) => {
-    const { formattedTill } = loaderData;
+    const { formattedTill } = loaderData as {
+      formattedTill: string;
+    };
 
     return {
       meta: [
@@ -50,7 +52,7 @@ export const Route = createFileRoute("/BG/$tillNumber")({
         },
         {
           property: "og:image",
-          content: "/sendke_ogimage_till.jpg",
+          content: "https://send.ke/sendke_ogimage_till.jpg",
         },
         {
           property: "og:url",
@@ -70,7 +72,7 @@ export const Route = createFileRoute("/BG/$tillNumber")({
         },
         {
           name: "twitter:image",
-          content: "/sendke_ogimage_till.jpg",
+          content: "https://send.ke/sendke_ogimage_till.jpg",
         },
       ],
     };

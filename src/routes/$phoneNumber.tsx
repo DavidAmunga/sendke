@@ -27,7 +27,9 @@ export const Route = createFileRoute("/$phoneNumber")({
     };
   },
   head: ({ loaderData }) => {
-    const { formattedPhone } = loaderData;
+    const { formattedPhone } = loaderData as {
+      formattedPhone: string;
+    };
 
     return {
       meta: [
@@ -48,7 +50,7 @@ export const Route = createFileRoute("/$phoneNumber")({
         },
         {
           property: "og:image",
-          content: "/sendke_ogimage_phone.jpg",
+          content: "https://send.ke/sendke_ogimage_phone.jpg",
         },
         {
           property: "og:url",
@@ -68,7 +70,7 @@ export const Route = createFileRoute("/$phoneNumber")({
         },
         {
           name: "twitter:image",
-          content: "/sendke_ogimage_phone.jpg",
+          content: "https://send.ke/sendke_ogimage_phone.jpg",
         },
       ],
     };

@@ -32,7 +32,10 @@ export const Route = createFileRoute("/PB/$paybill/$accountNumber")({
     };
   },
   head: ({ loaderData }) => {
-    const { formattedPaybill, formattedAccount } = loaderData;
+    const { formattedPaybill, formattedAccount } = loaderData as {
+      formattedPaybill: string;
+      formattedAccount: string;
+    };
 
     return {
       meta: [
@@ -53,7 +56,7 @@ export const Route = createFileRoute("/PB/$paybill/$accountNumber")({
         },
         {
           property: "og:image",
-          content: "/sendke_ogimage_paybill.jpg",
+          content: "https://send.ke/sendke_ogimage_paybill.jpg",
         },
         {
           property: "og:url",
@@ -73,7 +76,7 @@ export const Route = createFileRoute("/PB/$paybill/$accountNumber")({
         },
         {
           name: "twitter:image",
-          content: "/sendke_ogimage_paybill.jpg",
+          content: "https://send.ke/sendke_ogimage_paybill.jpg",
         },
       ],
     };
