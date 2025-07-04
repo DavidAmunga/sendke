@@ -44,7 +44,7 @@ export const Route = createFileRoute("/BG/$tillNumber")({
         },
         {
           property: "og:title",
-          content: `Payment Poster for Till Number ${formattedTill} - send.ke`,
+          content: `Payment Poster for Till ${formattedTill} - send.ke`,
         },
         {
           property: "og:description",
@@ -64,7 +64,7 @@ export const Route = createFileRoute("/BG/$tillNumber")({
         },
         {
           name: "twitter:title",
-          content: `Till Number ${formattedTill} - send.ke`,
+          content: `Payment Poster for Till ${formattedTill} - send.ke`,
         },
         {
           name: "twitter:description",
