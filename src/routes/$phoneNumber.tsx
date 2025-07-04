@@ -32,11 +32,11 @@ export const Route = createFileRoute("/$phoneNumber")({
     return {
       meta: [
         {
-          title: `Send Money to ${formattedPhone} - send.ke`,
+          title: `Payment Poster for Sending Money to ${formattedPhone} - send.ke`,
         },
         {
           name: "description",
-          content: `Create a professional payment poster for sending money to ${formattedPhone}. Generate QR codes and download high-quality payment posters instantly.`,
+          content: `Make a professional payment poster for sending money to ${formattedPhone}. Make high-quality payment posters instantly.`,
         },
         {
           property: "og:title",
@@ -60,7 +60,7 @@ export const Route = createFileRoute("/$phoneNumber")({
         },
         {
           name: "twitter:title",
-          content: `Send Money to ${formattedPhone} - send.ke`,
+          content: `Payment Poster for Sending Money to ${formattedPhone} - send.ke`,
         },
         {
           name: "twitter:description",

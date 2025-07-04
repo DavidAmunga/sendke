@@ -1,23 +1,13 @@
-import { EmbedUI } from "@/components/embed";
 import Footer from "@/components/footer";
 import Header from "@/components/header";
-import { Outlet, createRootRoute } from "@tanstack/react-router";
-
-const isEmbedDomain = () => {
-  if (typeof window === "undefined") return false;
-  return window.location.hostname.startsWith("embed.");
-};
+import { HeadContent, Outlet, createRootRoute } from "@tanstack/react-router";
 
 export const Route = createRootRoute({
   component: () => {
-    // Check if we're on the embed subdomain
-    if (isEmbedDomain()) {
-      return <EmbedUI />;
-    }
-
-    // Regular app layout
     return (
       <>
+        <HeadContent />
+
         <div className="min-h-screen flex flex-col bg-gray-100 overflow-x-hidden relative">
           {/* Dotted background pattern */}
           <div

@@ -34,19 +34,19 @@ export const Route = createFileRoute("/BG/$tillNumber")({
     return {
       meta: [
         {
-          title: `Till Number ${formattedTill} - send.ke`,
+          title: `Payment Poster for Till Number ${formattedTill} - send.ke`,
         },
         {
           name: "description",
-          content: `Create a professional payment poster for till number ${formattedTill}. Generate QR codes and download high-quality payment posters instantly.`,
+          content: `Make a professional payment poster for till number ${formattedTill}. Make high-quality payment posters instantly.`,
         },
         {
           property: "og:title",
-          content: `Till Number ${formattedTill} - send.ke`,
+          content: `Payment Poster for Till Number ${formattedTill} - send.ke`,
         },
         {
           property: "og:description",
-          content: `Create a professional payment poster for till number ${formattedTill}. Generate QR codes and download high-quality payment posters instantly.`,
+          content: `Make a professional payment poster for till number ${formattedTill}. Make high-quality payment posters instantly.`,
         },
         {
           property: "og:image",
@@ -66,7 +66,7 @@ export const Route = createFileRoute("/BG/$tillNumber")({
         },
         {
           name: "twitter:description",
-          content: `Create a professional payment poster for till number ${formattedTill}. Generate QR codes and download high-quality payment posters instantly.`,
+          content: `Make a professional payment poster for till number ${formattedTill}. Make high-quality payment posters instantly.`,
         },
         {
           name: "twitter:image",

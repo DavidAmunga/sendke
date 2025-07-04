@@ -37,19 +37,19 @@ export const Route = createFileRoute("/PB/$paybill/$accountNumber")({
     return {
       meta: [
         {
-          title: `Paybill ${formattedPaybill} - Account ${formattedAccount} - send.ke`,
+          title: `Payment Poster for Paybill ${formattedPaybill} - Account ${formattedAccount} - send.ke`,
         },
         {
           name: "description",
-          content: `Create a professional payment poster for paybill ${formattedPaybill} with account number ${formattedAccount}. Generate QR codes and download high-quality payment posters instantly.`,
+          content: `Make a professional payment poster for paybill ${formattedPaybill} with account number ${formattedAccount}. Make high-quality payment posters instantly.`,
         },
         {
           property: "og:title",
-          content: `Paybill ${formattedPaybill} - Account ${formattedAccount} - send.ke`,
+          content: `Payment Poster for Paybill ${formattedPaybill} - Account ${formattedAccount} - send.ke`,
         },
         {
           property: "og:description",
-          content: `Create a professional payment poster for paybill ${formattedPaybill} with account number ${formattedAccount}. Generate QR codes and download high-quality payment posters instantly.`,
+          content: `Make a professional payment poster for paybill ${formattedPaybill} with account number ${formattedAccount}. Make high-quality payment posters instantly.`,
         },
         {
           property: "og:image",
@@ -65,11 +65,11 @@ export const Route = createFileRoute("/PB/$paybill/$accountNumber")({
         },
         {
           name: "twitter:title",
-          content: `Paybill ${formattedPaybill} - Account ${formattedAccount} - send.ke`,
+          content: `Payment Poster for Paybill ${formattedPaybill} - Account ${formattedAccount} - send.ke`,
         },
         {
           name: "twitter:description",
-          content: `Create a professional payment poster for paybill ${formattedPaybill} with account number ${formattedAccount}. Generate QR codes and download high-quality payment posters instantly.`,
+          content: `Make a professional payment poster for paybill ${formattedPaybill} with account number ${formattedAccount}. Make high-quality payment posters instantly.`,
         },
         {
           name: "twitter:image",
