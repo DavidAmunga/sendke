@@ -29,14 +29,25 @@ import type { PaymentForm, PaymentType, Template } from "@/types/PaymentForm";
 import { FORM_DEFAULT_VALUES, formSchema } from "@/schemas/form";
 import { PosterPreview } from "@/components/poster-preview";
 import { downloadPoster } from "@/utils/poster-download";
+import {
+  formatAccountNumber,
+  formatBusinessNumber,
+  formatPhoneNumber,
+} from "@/lib/helpers";
 
 export const Route = createFileRoute("/")({
   component: Home,
 });
 
-function Home() {
+interface HomeProps {
+  formDefaults?: Partial<PaymentForm>;
+}
+
+export function Home({ formDefaults }: HomeProps = {}) {
   const posterRef = useRef<HTMLDivElement>(null);
   const [selectedTemplate, setSelectedTemplate] = useState(templates[0]);
+
+  const mergedDefaults = { ...FORM_DEFAULT_VALUES, ...formDefaults };
 
   const {
     control,
@@ -45,7 +56,7 @@ function Home() {
     formState: { errors, isValid },
   } = useForm<PaymentForm>({
     resolver: zodResolver(formSchema),
-    defaultValues: FORM_DEFAULT_VALUES,
+    defaultValues: mergedDefaults,
     mode: "onChange",
   });
 
@@ -63,7 +74,7 @@ function Home() {
     fontScale = 1.0,
   } = useWatch({
     control,
-    defaultValue: FORM_DEFAULT_VALUES,
+    defaultValue: mergedDefaults,
   });
 
   const colorOptions = [
@@ -72,52 +83,6 @@ function Home() {
     { name: "Yellow", value: "#F7C50C", class: "bg-[#F7C50C]" },
     { name: "Blue", value: "#1B398E", class: "bg-blue-800" },
   ];
-
-  const formatPhoneNumber = (value: string): string => {
-    const numbers = value.replace(/\D/g, "");
-    const match = numbers.match(/^(\d{4})(\d{3})(\d{3})$/);
-    if (match) {
-      return `${match[1]} ${match[2]} ${match[3]}`;
-    }
-    return value;
-  };
-
-  const formatBusinessNumber = (value: string): string => {
-    const numbers = value.replace(/\D/g, "");
-    if (numbers.length === 0) return "";
-
-    // Format numbers into groups of 3-4 digits
-    if (numbers.length <= 3) {
-      return numbers;
-    } else if (numbers.length <= 6) {
-      // Split into two groups of 3
-      return numbers.replace(/(\d{3})(\d{1,3})/, "$1 $2");
-    } else if (numbers.length <= 7) {
-      // Split into 3 + 4
-      return numbers.replace(/(\d{3})(\d{1,4})/, "$1 $2");
-    } else if (numbers.length <= 8) {
-      // Split into 4 + 4
-      return numbers.replace(/(\d{4})(\d{1,4})/, "$1 $2");
-    } else if (numbers.length <= 9) {
-      // Split into 3 + 3 + 3
-      return numbers.replace(/(\d{3})(\d{3})(\d{1,3})/, "$1 $2 $3");
-    } else {
-      // For longer numbers, split into 3 + 3 + 4
-      return numbers.replace(/(\d{3})(\d{3})(\d{1,4})/, "$1 $2 $3");
-    }
-  };
-
-  const formatAccountNumber = (value: string): string => {
-    const numbers = value.replace(/\D/g, "");
-    if (numbers.length === 0) return "";
-
-    // Format numbers into groups of 4 digits
-    const groups = [];
-    for (let i = 0; i < numbers.length; i += 4) {
-      groups.push(numbers.slice(i, i + 4));
-    }
-    return groups.join(" ");
-  };
 
   // Get current display values based on payment type
   const getCurrentDisplayValues = () => {

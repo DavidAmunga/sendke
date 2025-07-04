@@ -11,13 +11,34 @@
 // Import Routes
 
 import { Route as rootRoute } from './routes/__root'
+import { Route as PhoneNumberImport } from './routes/$phoneNumber'
 import { Route as IndexImport } from './routes/index'
+import { Route as BGTillNumberImport } from './routes/BG.$tillNumber'
+import { Route as PBPaybillAccountNumberImport } from './routes/PB.$paybill.$accountNumber'
 
 // Create/Update Routes
+
+const PhoneNumberRoute = PhoneNumberImport.update({
+  id: '/$phoneNumber',
+  path: '/$phoneNumber',
+  getParentRoute: () => rootRoute,
+} as any)
 
 const IndexRoute = IndexImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRoute,
+} as any)
+
+const BGTillNumberRoute = BGTillNumberImport.update({
+  id: '/BG/$tillNumber',
+  path: '/BG/$tillNumber',
+  getParentRoute: () => rootRoute,
+} as any)
+
+const PBPaybillAccountNumberRoute = PBPaybillAccountNumberImport.update({
+  id: '/PB/$paybill/$accountNumber',
+  path: '/PB/$paybill/$accountNumber',
   getParentRoute: () => rootRoute,
 } as any)
 
@@ -32,6 +53,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexImport
       parentRoute: typeof rootRoute
     }
+    '/$phoneNumber': {
+      id: '/$phoneNumber'
+      path: '/$phoneNumber'
+      fullPath: '/$phoneNumber'
+      preLoaderRoute: typeof PhoneNumberImport
+      parentRoute: typeof rootRoute
+    }
+    '/BG/$tillNumber': {
+      id: '/BG/$tillNumber'
+      path: '/BG/$tillNumber'
+      fullPath: '/BG/$tillNumber'
+      preLoaderRoute: typeof BGTillNumberImport
+      parentRoute: typeof rootRoute
+    }
+    '/PB/$paybill/$accountNumber': {
+      id: '/PB/$paybill/$accountNumber'
+      path: '/PB/$paybill/$accountNumber'
+      fullPath: '/PB/$paybill/$accountNumber'
+      preLoaderRoute: typeof PBPaybillAccountNumberImport
+      parentRoute: typeof rootRoute
+    }
   }
 }
 
@@ -39,32 +81,56 @@ declare module '@tanstack/react-router' {
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/$phoneNumber': typeof PhoneNumberRoute
+  '/BG/$tillNumber': typeof BGTillNumberRoute
+  '/PB/$paybill/$accountNumber': typeof PBPaybillAccountNumberRoute
 }
 
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/$phoneNumber': typeof PhoneNumberRoute
+  '/BG/$tillNumber': typeof BGTillNumberRoute
+  '/PB/$paybill/$accountNumber': typeof PBPaybillAccountNumberRoute
 }
 
 export interface FileRoutesById {
   __root__: typeof rootRoute
   '/': typeof IndexRoute
+  '/$phoneNumber': typeof PhoneNumberRoute
+  '/BG/$tillNumber': typeof BGTillNumberRoute
+  '/PB/$paybill/$accountNumber': typeof PBPaybillAccountNumberRoute
 }
 
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/$phoneNumber'
+    | '/BG/$tillNumber'
+    | '/PB/$paybill/$accountNumber'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to: '/' | '/$phoneNumber' | '/BG/$tillNumber' | '/PB/$paybill/$accountNumber'
+  id:
+    | '__root__'
+    | '/'
+    | '/$phoneNumber'
+    | '/BG/$tillNumber'
+    | '/PB/$paybill/$accountNumber'
   fileRoutesById: FileRoutesById
 }
 
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  PhoneNumberRoute: typeof PhoneNumberRoute
+  BGTillNumberRoute: typeof BGTillNumberRoute
+  PBPaybillAccountNumberRoute: typeof PBPaybillAccountNumberRoute
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  PhoneNumberRoute: PhoneNumberRoute,
+  BGTillNumberRoute: BGTillNumberRoute,
+  PBPaybillAccountNumberRoute: PBPaybillAccountNumberRoute,
 }
 
 export const routeTree = rootRoute
@@ -77,11 +143,23 @@ export const routeTree = rootRoute
     "__root__": {
       "filePath": "__root.tsx",
       "children": [
-        "/"
+        "/",
+        "/$phoneNumber",
+        "/BG/$tillNumber",
+        "/PB/$paybill/$accountNumber"
       ]
     },
     "/": {
       "filePath": "index.tsx"
+    },
+    "/$phoneNumber": {
+      "filePath": "$phoneNumber.tsx"
+    },
+    "/BG/$tillNumber": {
+      "filePath": "BG.$tillNumber.tsx"
+    },
+    "/PB/$paybill/$accountNumber": {
+      "filePath": "PB.$paybill.$accountNumber.tsx"
     }
   }
 }
