@@ -25,7 +25,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import type { PaymentForm, PaymentType, Template } from "@/types/PaymentForm";
+import type { PaymentForm, PaymentType } from "@/types/PaymentForm";
 import { FORM_DEFAULT_VALUES, formSchema } from "@/schemas/form";
 import { PosterPreview } from "@/components/poster-preview";
 import { downloadPoster } from "@/utils/poster-download";

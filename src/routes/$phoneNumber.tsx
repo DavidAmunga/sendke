@@ -4,7 +4,7 @@ import type { PaymentForm } from "@/types/PaymentForm";
 import { formatPhoneNumber } from "@/lib/helpers";
 
 const SendMoneyHome = () => {
-  const { params, formattedPhone } = useLoaderData({ from: "/$phoneNumber" });
+  const { formattedPhone } = useLoaderData({ from: "/$phoneNumber" });
 
   const formDefaults: Partial<PaymentForm> = {
     paymentType: "SEND_MONEY",

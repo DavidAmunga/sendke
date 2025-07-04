@@ -4,7 +4,7 @@ import type { PaymentForm } from "@/types/PaymentForm";
 import { formatBusinessNumber, formatAccountNumber } from "@/lib/helpers";
 
 const PaybillHome = () => {
-  const { params, formattedPaybill, formattedAccount } = useLoaderData({
+  const { formattedPaybill, formattedAccount } = useLoaderData({
     from: "/PB/$paybill/$accountNumber",
   });
 

@@ -4,7 +4,7 @@ import type { PaymentForm } from "@/types/PaymentForm";
 import { formatBusinessNumber } from "@/lib/helpers";
 
 const TillHome = () => {
-  const { params, formattedTill } = useLoaderData({
+  const { formattedTill } = useLoaderData({
     from: "/BG/$tillNumber",
   });
 
